@@ -1,0 +1,175 @@
+{
+  "version": 1,
+  "societies": [
+    {
+      "id": "soc_shanti",
+      "name": "Shanti CHS",
+      "slug": "shanti-chs",
+      "address": "12 Linking Road, Bandra West",
+      "city": "Mumbai",
+      "status": "active",
+      "plan": "basic",
+      "createdAt": "2025-06-01T10:00:00.000Z"
+    },
+    {
+      "id": "soc_green",
+      "name": "Green Park CHS",
+      "slug": "green-park",
+      "address": "Plot 4, Thane West",
+      "city": "Thane",
+      "status": "active",
+      "plan": "pro",
+      "createdAt": "2025-04-15T10:00:00.000Z"
+    }
+  ],
+  "buildings": [
+    { "id": "bld_shanti_main", "societyId": "soc_shanti", "name": "Main", "isMain": true },
+    { "id": "bld_green_a", "societyId": "soc_green", "name": "Wing A", "isMain": true },
+    { "id": "bld_green_b", "societyId": "soc_green", "name": "Wing B", "isMain": false }
+  ],
+  "flatTypes": [
+    { "id": "ft_shanti_2bhk", "societyId": "soc_shanti", "name": "2BHK", "monthlyRate": 3500 },
+    { "id": "ft_shanti_3bhk", "societyId": "soc_shanti", "name": "3BHK", "monthlyRate": 4500 },
+    { "id": "ft_green_2bhk", "societyId": "soc_green", "name": "2BHK", "monthlyRate": 4000 },
+    { "id": "ft_green_3bhk", "societyId": "soc_green", "name": "3BHK", "monthlyRate": 5500 },
+    { "id": "ft_green_shop", "societyId": "soc_green", "name": "Shop", "monthlyRate": 6000 }
+  ],
+  "flats": [
+    { "id": "flt_s101", "societyId": "soc_shanti", "buildingId": "bld_shanti_main", "number": "101", "flatTypeId": "ft_shanti_2bhk" },
+    { "id": "flt_s102", "societyId": "soc_shanti", "buildingId": "bld_shanti_main", "number": "102", "flatTypeId": "ft_shanti_2bhk" },
+    { "id": "flt_s201", "societyId": "soc_shanti", "buildingId": "bld_shanti_main", "number": "201", "flatTypeId": "ft_shanti_3bhk" },
+    { "id": "flt_s202", "societyId": "soc_shanti", "buildingId": "bld_shanti_main", "number": "202", "flatTypeId": "ft_shanti_3bhk" },
+    { "id": "flt_s301", "societyId": "soc_shanti", "buildingId": "bld_shanti_main", "number": "301", "flatTypeId": "ft_shanti_2bhk" },
+    { "id": "flt_s302", "societyId": "soc_shanti", "buildingId": "bld_shanti_main", "number": "302", "flatTypeId": "ft_shanti_2bhk" },
+    { "id": "flt_s401", "societyId": "soc_shanti", "buildingId": "bld_shanti_main", "number": "401", "flatTypeId": "ft_shanti_3bhk" },
+    { "id": "flt_s402", "societyId": "soc_shanti", "buildingId": "bld_shanti_main", "number": "402", "flatTypeId": "ft_shanti_3bhk" },
+    { "id": "flt_ga101", "societyId": "soc_green", "buildingId": "bld_green_a", "number": "A-101", "flatTypeId": "ft_green_2bhk" },
+    { "id": "flt_ga102", "societyId": "soc_green", "buildingId": "bld_green_a", "number": "A-102", "flatTypeId": "ft_green_2bhk" },
+    { "id": "flt_ga201", "societyId": "soc_green", "buildingId": "bld_green_a", "number": "A-201", "flatTypeId": "ft_green_3bhk" },
+    { "id": "flt_ga202", "societyId": "soc_green", "buildingId": "bld_green_a", "number": "A-202", "flatTypeId": "ft_green_3bhk" },
+    { "id": "flt_ga301", "societyId": "soc_green", "buildingId": "bld_green_a", "number": "A-301", "flatTypeId": "ft_green_2bhk" },
+    { "id": "flt_ga_shop", "societyId": "soc_green", "buildingId": "bld_green_a", "number": "A-G1", "flatTypeId": "ft_green_shop" },
+    { "id": "flt_gb101", "societyId": "soc_green", "buildingId": "bld_green_b", "number": "B-101", "flatTypeId": "ft_green_2bhk" },
+    { "id": "flt_gb102", "societyId": "soc_green", "buildingId": "bld_green_b", "number": "B-102", "flatTypeId": "ft_green_2bhk" },
+    { "id": "flt_gb201", "societyId": "soc_green", "buildingId": "bld_green_b", "number": "B-201", "flatTypeId": "ft_green_3bhk" },
+    { "id": "flt_gb202", "societyId": "soc_green", "buildingId": "bld_green_b", "number": "B-202", "flatTypeId": "ft_green_3bhk" },
+    { "id": "flt_gb301", "societyId": "soc_green", "buildingId": "bld_green_b", "number": "B-301", "flatTypeId": "ft_green_2bhk" },
+    { "id": "flt_gb302", "societyId": "soc_green", "buildingId": "bld_green_b", "number": "B-302", "flatTypeId": "ft_green_2bhk" }
+  ],
+  "staff": [
+    {
+      "id": "stf_shanti_chair",
+      "societyId": "soc_shanti",
+      "name": "Ramesh Patil",
+      "phone": "9876500001",
+      "email": "chairman@shanti.demo",
+      "roleTemplate": "chairman",
+      "permissions": ["structure.manage", "residents.manage", "billing.manage", "payments.view", "payments.record", "expenses.manage", "reports.view", "notices.manage", "staff.manage"],
+      "buildingScopeIds": null
+    },
+    {
+      "id": "stf_shanti_sec",
+      "societyId": "soc_shanti",
+      "name": "Sneha Desai",
+      "phone": "9876500002",
+      "email": "secretary@shanti.demo",
+      "roleTemplate": "secretary",
+      "permissions": ["structure.manage", "residents.manage", "payments.view", "reports.view", "notices.manage"],
+      "buildingScopeIds": null
+    },
+    {
+      "id": "stf_shanti_treas",
+      "societyId": "soc_shanti",
+      "name": "Amit Kulkarni",
+      "phone": "9876500003",
+      "email": "treasurer@shanti.demo",
+      "roleTemplate": "treasurer",
+      "permissions": ["billing.manage", "payments.view", "payments.record", "expenses.manage", "reports.view"],
+      "buildingScopeIds": null
+    },
+    {
+      "id": "stf_green_chair",
+      "societyId": "soc_green",
+      "name": "Deepak Mehta",
+      "phone": "9876501001",
+      "email": "chairman@greenpark.demo",
+      "roleTemplate": "chairman",
+      "permissions": ["structure.manage", "residents.manage", "billing.manage", "payments.view", "payments.record", "expenses.manage", "reports.view", "notices.manage", "staff.manage"],
+      "buildingScopeIds": null
+    },
+    {
+      "id": "stf_green_sec",
+      "societyId": "soc_green",
+      "name": "Priya Shah",
+      "phone": "9876501002",
+      "email": "secretary@greenpark.demo",
+      "roleTemplate": "secretary",
+      "permissions": ["structure.manage", "residents.manage", "payments.view", "reports.view", "notices.manage"],
+      "buildingScopeIds": null
+    },
+    {
+      "id": "stf_green_treas",
+      "societyId": "soc_green",
+      "name": "Nikhil Joshi",
+      "phone": "9876501003",
+      "email": "treasurer@greenpark.demo",
+      "roleTemplate": "treasurer",
+      "permissions": ["billing.manage", "payments.view", "payments.record", "expenses.manage", "reports.view"],
+      "buildingScopeIds": null
+    },
+    {
+      "id": "stf_green_mgr_b",
+      "societyId": "soc_green",
+      "name": "Kavita Nair",
+      "phone": "9876501004",
+      "email": "wingb@greenpark.demo",
+      "roleTemplate": "building_manager",
+      "permissions": ["residents.manage", "payments.view", "notices.manage", "reports.view"],
+      "buildingScopeIds": ["bld_green_b"]
+    }
+  ],
+  "residents": [
+    { "id": "res_s101", "societyId": "soc_shanti", "flatId": "flt_s101", "name": "Anil Sharma", "phone": "9000000101" },
+    { "id": "res_s102", "societyId": "soc_shanti", "flatId": "flt_s102", "name": "Meera Iyer", "phone": "9000000102" },
+    { "id": "res_s201", "societyId": "soc_shanti", "flatId": "flt_s201", "name": "Vikram Rao", "phone": "9000000201" },
+    { "id": "res_s202", "societyId": "soc_shanti", "flatId": "flt_s202", "name": "Pooja Nair", "phone": "9000000202" },
+    { "id": "res_ga101", "societyId": "soc_green", "flatId": "flt_ga101", "name": "Rahul Verma", "phone": "9000001101" },
+    { "id": "res_gb101", "societyId": "soc_green", "flatId": "flt_gb101", "name": "Neha Kapoor", "phone": "9000002101" },
+    { "id": "res_gb201", "societyId": "soc_green", "flatId": "flt_gb201", "name": "Sanjay Gupta", "phone": "9000002201" }
+  ],
+  "billingConfigs": [
+    { "societyId": "soc_shanti", "latePenaltyAmount": 200, "dueDayOfMonth": 10 },
+    { "societyId": "soc_green", "latePenaltyAmount": 300, "dueDayOfMonth": 7 }
+  ],
+  "bills": [
+    { "id": "bill_s101_08", "societyId": "soc_shanti", "flatId": "flt_s101", "month": "2025-08", "maintenanceAmount": 3500, "previousDue": 0, "penalty": 0, "totalAmount": 3500, "paidAmount": 3500, "status": "paid", "publishedAt": "2025-08-01T09:00:00.000Z" },
+    { "id": "bill_s101_09", "societyId": "soc_shanti", "flatId": "flt_s101", "month": "2025-09", "maintenanceAmount": 3500, "previousDue": 0, "penalty": 0, "totalAmount": 3500, "paidAmount": 3500, "status": "paid", "publishedAt": "2025-09-01T09:00:00.000Z" },
+    { "id": "bill_s101_10", "societyId": "soc_shanti", "flatId": "flt_s101", "month": "2025-10", "maintenanceAmount": 3500, "previousDue": 0, "penalty": 0, "totalAmount": 3500, "paidAmount": 1000, "status": "partial", "publishedAt": "2025-10-01T09:00:00.000Z" },
+    { "id": "bill_s102_10", "societyId": "soc_shanti", "flatId": "flt_s102", "month": "2025-10", "maintenanceAmount": 3500, "previousDue": 3500, "penalty": 200, "totalAmount": 7200, "paidAmount": 0, "status": "overdue", "publishedAt": "2025-10-01T09:00:00.000Z" },
+    { "id": "bill_s201_10", "societyId": "soc_shanti", "flatId": "flt_s201", "month": "2025-10", "maintenanceAmount": 4500, "previousDue": 0, "penalty": 0, "totalAmount": 4500, "paidAmount": 4500, "status": "paid", "publishedAt": "2025-10-01T09:00:00.000Z" },
+    { "id": "bill_gb101_08", "societyId": "soc_green", "flatId": "flt_gb101", "month": "2025-08", "maintenanceAmount": 4000, "previousDue": 0, "penalty": 0, "totalAmount": 4000, "paidAmount": 0, "status": "overdue", "publishedAt": "2025-08-01T09:00:00.000Z" },
+    { "id": "bill_gb101_09", "societyId": "soc_green", "flatId": "flt_gb101", "month": "2025-09", "maintenanceAmount": 4000, "previousDue": 4000, "penalty": 300, "totalAmount": 8300, "paidAmount": 0, "status": "overdue", "publishedAt": "2025-09-01T09:00:00.000Z" },
+    { "id": "bill_gb101_10", "societyId": "soc_green", "flatId": "flt_gb101", "month": "2025-10", "maintenanceAmount": 4000, "previousDue": 8300, "penalty": 300, "totalAmount": 12600, "paidAmount": 0, "status": "overdue", "publishedAt": "2025-10-01T09:00:00.000Z" },
+    { "id": "bill_ga101_10", "societyId": "soc_green", "flatId": "flt_ga101", "month": "2025-10", "maintenanceAmount": 4000, "previousDue": 0, "penalty": 0, "totalAmount": 4000, "paidAmount": 4000, "status": "paid", "publishedAt": "2025-10-01T09:00:00.000Z" },
+    { "id": "bill_gb201_10", "societyId": "soc_green", "flatId": "flt_gb201", "month": "2025-10", "maintenanceAmount": 5500, "previousDue": 0, "penalty": 0, "totalAmount": 5500, "paidAmount": 2000, "status": "partial", "publishedAt": "2025-10-01T09:00:00.000Z" }
+  ],
+  "payments": [
+    { "id": "pay_1", "societyId": "soc_shanti", "flatId": "flt_s101", "billId": "bill_s101_08", "amount": 3500, "method": "upi", "note": "August full", "createdAt": "2025-08-05T11:00:00.000Z" },
+    { "id": "pay_2", "societyId": "soc_shanti", "flatId": "flt_s101", "billId": "bill_s101_09", "amount": 3500, "method": "upi", "note": "September full", "createdAt": "2025-09-04T11:00:00.000Z" },
+    { "id": "pay_3", "societyId": "soc_shanti", "flatId": "flt_s101", "billId": "bill_s101_10", "amount": 1000, "method": "upi", "note": "Partial Oct", "createdAt": "2025-10-08T11:00:00.000Z" },
+    { "id": "pay_4", "societyId": "soc_shanti", "flatId": "flt_s201", "billId": "bill_s201_10", "amount": 4500, "method": "bank", "note": "October full", "createdAt": "2025-10-03T11:00:00.000Z" },
+    { "id": "pay_5", "societyId": "soc_green", "flatId": "flt_ga101", "billId": "bill_ga101_10", "amount": 4000, "method": "upi", "note": "October full", "createdAt": "2025-10-02T11:00:00.000Z" },
+    { "id": "pay_6", "societyId": "soc_green", "flatId": "flt_gb201", "billId": "bill_gb201_10", "amount": 2000, "method": "upi", "note": "Partial Oct", "createdAt": "2025-10-12T11:00:00.000Z" }
+  ],
+  "expenses": [
+    { "id": "exp_1", "societyId": "soc_shanti", "month": "2025-10", "title": "Lift AMC", "amount": 8000, "category": "Maintenance", "createdAt": "2025-10-05T10:00:00.000Z" },
+    { "id": "exp_2", "societyId": "soc_shanti", "month": "2025-10", "title": "Security salary", "amount": 25000, "category": "Staff", "createdAt": "2025-10-06T10:00:00.000Z" },
+    { "id": "exp_3", "societyId": "soc_green", "month": "2025-10", "title": "Garden contract", "amount": 12000, "category": "Amenities", "createdAt": "2025-10-04T10:00:00.000Z" },
+    { "id": "exp_4", "societyId": "soc_green", "month": "2025-10", "title": "Water tanker", "amount": 4500, "category": "Utilities", "createdAt": "2025-10-09T10:00:00.000Z" }
+  ],
+  "notices": [
+    { "id": "ntc_1", "societyId": "soc_shanti", "title": "Diwali water schedule", "body": "Water supply 6–9 AM and 6–9 PM during festival week.", "createdAt": "2025-10-20T08:00:00.000Z" },
+    { "id": "ntc_2", "societyId": "soc_green", "title": "AGM on 15 Nov", "body": "Annual general meeting in Wing A lobby at 11 AM.", "createdAt": "2025-10-18T08:00:00.000Z" }
+  ],
+  "session": null
+}
