@@ -1,15 +1,12 @@
 "use client";
 
-import { use, useMemo } from "react";
+import { useMemo } from "react";
 import { PageCard } from "@/components/demo/Shell";
 import { formatINR, useDemoState } from "@/lib/demo/hooks";
+import { useSocietySlug } from "@/lib/demo/useSocietySlug";
 
-export default function OverduePage({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}) {
-  const { slug } = use(params);
+export default function OverduePage() {
+  const slug = useSocietySlug();
   const state = useDemoState();
   const society = state.societies.find((s) => s.slug === slug);
 

@@ -1,16 +1,13 @@
 "use client";
 
-import { use, useState } from "react";
+import { useState } from "react";
 import { PageCard } from "@/components/demo/Shell";
 import { formatINR, useDemoState, useHasPermission } from "@/lib/demo/hooks";
 import { addExpense } from "@/lib/demo/store";
+import { useSocietySlug } from "@/lib/demo/useSocietySlug";
 
-export default function ExpensesPage({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}) {
-  const { slug } = use(params);
+export default function ExpensesPage() {
+  const slug = useSocietySlug();
   const state = useDemoState();
   const society = state.societies.find((s) => s.slug === slug);
   const canEdit = useHasPermission("expenses.manage");

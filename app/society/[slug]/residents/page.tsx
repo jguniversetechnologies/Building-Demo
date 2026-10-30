@@ -1,16 +1,13 @@
 "use client";
 
-import { use, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { PageCard } from "@/components/demo/Shell";
 import { useDemoState, useHasPermission } from "@/lib/demo/hooks";
 import { inviteResident } from "@/lib/demo/store";
+import { useSocietySlug } from "@/lib/demo/useSocietySlug";
 
-export default function ResidentsPage({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}) {
-  const { slug } = use(params);
+export default function ResidentsPage() {
+  const slug = useSocietySlug();
   const state = useDemoState();
   const society = state.societies.find((s) => s.slug === slug);
   const canEdit = useHasPermission("residents.manage");

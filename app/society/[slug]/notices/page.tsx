@@ -1,16 +1,13 @@
 "use client";
 
-import { use, useState } from "react";
+import { useState } from "react";
 import { PageCard } from "@/components/demo/Shell";
 import { useDemoState, useHasPermission } from "@/lib/demo/hooks";
 import { addNotice } from "@/lib/demo/store";
+import { useSocietySlug } from "@/lib/demo/useSocietySlug";
 
-export default function NoticesPage({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}) {
-  const { slug } = use(params);
+export default function NoticesPage() {
+  const slug = useSocietySlug();
   const state = useDemoState();
   const society = state.societies.find((s) => s.slug === slug);
   const canEdit =
