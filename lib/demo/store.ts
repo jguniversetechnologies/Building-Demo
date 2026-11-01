@@ -369,6 +369,12 @@ export function updateBillingConfig(
   writeState(state);
 }
 
+/** Unpaid amount of a bill's own month charges only (not nested arrears). */
+function unpaidOwnCharges(bill: Bill) {
+  const own = bill.maintenanceAmount + bill.penalty;
+  return Math.max(0, own - Math.min(bill.paidAmount, own));
+}
+
 export function generateBillsForMonth(societyId: string, month: string) {
   const state = readState();
   const flats = state.flats.filter((f) => f.societyId === societyId);
@@ -377,6 +383,7 @@ export function generateBillsForMonth(societyId: string, month: string) {
   );
   const cfg = state.billingConfigs.find((c) => c.societyId === societyId);
   const penalty = cfg?.latePenaltyAmount ?? 0;
+  let created = 0;
 
   for (const flat of flats) {
     const exists = state.bills.some(
@@ -384,9 +391,15 @@ export function generateBillsForMonth(societyId: string, month: string) {
     );
     if (exists) continue;
     const rate = types.get(flat.flatTypeId)?.monthlyRate ?? 0;
+    // Sum only each prior month's own charges still unpaid — avoids double-counting.
     const prior = state.bills
-      .filter((b) => b.flatId === flat.id && b.month < month)
-      .reduce((sum, b) => sum + (b.totalAmount - b.paidAmount), 0);
+      .filter(
+        (b) =>
+          b.flatId === flat.id &&
+          b.month < month &&
+          b.status !== "draft",
+      )
+      .reduce((sum, b) => sum + unpaidOwnCharges(b), 0);
     const late = prior > 0 ? penalty : 0;
     const total = rate + prior + late;
     state.bills.push({
@@ -402,20 +415,52 @@ export function generateBillsForMonth(societyId: string, month: string) {
       status: "draft",
       publishedAt: null,
     });
+    created += 1;
   }
   writeState(state);
+  return { created, month };
 }
 
 export function publishBills(societyId: string, month: string) {
   const state = readState();
+  let published = 0;
   for (const bill of state.bills) {
     if (bill.societyId !== societyId || bill.month !== month) continue;
     if (bill.status === "draft") {
+      // "overdue" = this bill includes unpaid arrears from earlier months
       bill.status = bill.previousDue > 0 ? "overdue" : "published";
       bill.publishedAt = nowIso();
+      published += 1;
     }
   }
   writeState(state);
+  return { published, month };
+}
+
+/** Demo one-click: create drafts (if needed) then publish for the month. */
+export function createAndPublishMonth(societyId: string, month: string) {
+  const gen = generateBillsForMonth(societyId, month);
+  const pub = publishBills(societyId, month);
+  return { ...gen, ...pub };
+}
+
+export function deleteMonthBills(societyId: string, month: string) {
+  const state = readState();
+  const monthBills = state.bills.filter(
+    (b) => b.societyId === societyId && b.month === month,
+  );
+  for (const bill of monthBills) {
+    if (bill.paidAmount > 0 || state.payments.some((p) => p.billId === bill.id)) {
+      return {
+        ok: false as const,
+        error: "Some bills have payments — undo payments first",
+      };
+    }
+  }
+  const ids = new Set(monthBills.map((b) => b.id));
+  state.bills = state.bills.filter((b) => !ids.has(b.id));
+  writeState(state);
+  return { ok: true as const, removed: monthBills.length };
 }
 
 export function recordPayment(input: {
