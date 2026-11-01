@@ -2,14 +2,14 @@
 
 import { useRouter } from "next/navigation";
 import { useDemoState } from "@/lib/demo/hooks";
-import { setSession } from "@/lib/demo/store";
+import { clearSession, setSession } from "@/lib/demo/store";
 import type { DemoSession } from "@/lib/demo/types";
 
 type Card = {
   step?: string;
   title: string;
   desc: string;
-  session: DemoSession;
+  session: DemoSession | null;
   href: string;
   accent?: string;
 };
@@ -27,7 +27,8 @@ export default function HomePage() {
   const resident = state.residents.find((r) => r.id === "res_gb101");
 
   const enter = (card: Card) => {
-    setSession(card.session);
+    if (card.session) setSession(card.session);
+    else clearSession();
     router.push(card.href);
   };
 
@@ -49,8 +50,8 @@ export default function HomePage() {
     {
       step: "2",
       title: "Secretary",
-      desc: "Wings, flats, invite residents (temp password)",
-      href: `/society/${green?.slug ?? "green-park"}/structure`,
+      desc: "Structure + invite resident with phone number",
+      href: `/society/${green?.slug ?? "green-park"}/residents`,
       accent: "from-teal-700 to-teal-900",
       session: {
         role: "secretary",
@@ -76,22 +77,16 @@ export default function HomePage() {
     },
     {
       step: "4",
-      title: "Resident pay",
-      desc: "Digital bill + pay any amount (UPI demo) → reflects live",
-      href: "/app/pay",
+      title: "Resident login & pay",
+      desc: `Phone login (${resident?.phone ?? "9000002101"}) → OTP 1234 → pay any amount`,
+      href: "/app/login",
       accent: "from-cyan-700 to-cyan-950",
-      session: {
-        role: "resident",
-        societyId: green?.id ?? null,
-        staffId: null,
-        residentId: resident?.id ?? null,
-        label: `Resident · ${resident?.name ?? ""} · B-101`,
-      },
+      session: null,
     },
     {
       step: "5",
       title: "Overdue matrix",
-      desc: "Room × month paid/unpaid/overdue (Deepak table)",
+      desc: "Room × month paid / partial / unpaid",
       href: `/society/${green?.slug ?? "green-park"}/overdue`,
       accent: "from-amber-700 to-amber-900",
       session: {
@@ -142,36 +137,34 @@ export default function HomePage() {
       },
     },
     {
-      title: "Resident app home",
-      desc: "Notices, due amount, bill, history, print",
-      href: "/app",
-      session: {
-        role: "resident",
-        societyId: green?.id ?? null,
-        staffId: null,
-        residentId: resident?.id ?? null,
-        label: `Resident · ${resident?.name ?? ""}`,
-      },
+      title: "Resident phone login",
+      desc: "Open app → enter mobile → OTP 1234 → bill & pay",
+      href: "/app/login",
+      session: null,
     },
   ];
 
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-10 px-4 py-10">
-      <div className="max-w-3xl">
-        <p className="text-sm font-semibold uppercase tracking-wide text-teal-800">
-          Client pitch demo · Society Shastra flows
-        </p>
-        <h1 className="mt-2 text-4xl font-semibold tracking-tight text-slate-900 md:text-5xl">
-          Maintenance, clear for committee & residents
-        </h1>
-        <p className="mt-4 text-lg text-slate-600">
-          Follow steps 1→5 in order. Same store: when a resident pays, Treasurer
-          Payments / Overdue update immediately. Data from{" "}
-          <code className="rounded bg-white/80 px-1.5 py-0.5 text-sm">
-            data/seed.json
-          </code>
-          + localStorage.
-        </p>
+      <div className="flex max-w-3xl flex-wrap items-start justify-between gap-4">
+        <div>
+          <p className="text-sm font-semibold uppercase tracking-wide text-teal-800">
+            Client pitch demo · Society Shastra flows
+          </p>
+          <h1 className="mt-2 text-4xl font-semibold tracking-tight text-slate-900 md:text-5xl">
+            Maintenance, clear for committee & residents
+          </h1>
+          <p className="mt-4 text-lg text-slate-600">
+            Follow steps 1→5 in order. Same store: when a resident pays,
+            Treasurer Payments / Overdue update immediately.
+          </p>
+          {state.session ? (
+            <p className="mt-3 rounded-xl bg-white/80 px-3 py-2 text-sm text-slate-700">
+              Last role: <strong>{state.session.label}</strong> — pick another
+              card or use Switch role inside consoles.
+            </p>
+          ) : null}
+        </div>
       </div>
 
       <section>

@@ -11,12 +11,16 @@ export default function ResidentHomePage() {
   );
   const flatId = resident?.flatId ?? "";
   const due = flatId ? outstandingForFlat(flatId) : 0;
-  const notices = state.notices.filter((n) => n.societyId === resident?.societyId);
+  const notices = state.notices.filter(
+    (n) => n.societyId === resident?.societyId,
+  );
 
   if (!resident) {
     return (
       <div className="p-5 text-sm text-slate-600">
-        Open from role picker as Resident.
+        <Link href="/app/login" className="text-teal-700 underline">
+          Login with phone
+        </Link>
       </div>
     );
   }
@@ -28,12 +32,23 @@ export default function ResidentHomePage() {
         <p className="mt-1 text-3xl font-semibold text-slate-900">
           {formatINR(due)}
         </p>
-        <Link
-          href="/app/pay"
-          className="mt-4 inline-flex rounded-xl bg-teal-700 px-4 py-2 text-sm font-medium text-white"
-        >
-          Pay now
-        </Link>
+        <p className="mt-1 text-xs text-slate-500">
+          Logged in as {resident.phone}
+        </p>
+        <div className="mt-4 flex gap-2">
+          <Link
+            href="/app/bill"
+            className="inline-flex rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium"
+          >
+            View bill
+          </Link>
+          <Link
+            href="/app/pay"
+            className="inline-flex rounded-xl bg-teal-700 px-4 py-2 text-sm font-medium text-white"
+          >
+            Pay now
+          </Link>
+        </div>
       </div>
 
       <div className="rounded-2xl bg-white p-4 shadow-sm">
@@ -45,6 +60,9 @@ export default function ResidentHomePage() {
               <p className="text-slate-600">{n.body}</p>
             </li>
           ))}
+          {notices.length === 0 ? (
+            <p className="text-sm text-slate-500">No notices.</p>
+          ) : null}
         </ul>
       </div>
     </div>

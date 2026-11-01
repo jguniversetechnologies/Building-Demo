@@ -1,12 +1,33 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import {
   getDemoState,
   getServerDemoState,
   subscribeDemoStore,
 } from "./store";
 import type { DemoState, Permission } from "./types";
+
+/** Short success/error flash for demo CRUD actions. */
+export function useFlash(ms = 2400) {
+  const [flash, setFlash] = useState<{
+    text: string;
+    tone: "ok" | "err";
+  } | null>(null);
+
+  useEffect(() => {
+    if (!flash) return;
+    const t = window.setTimeout(() => setFlash(null), ms);
+    return () => window.clearTimeout(t);
+  }, [flash, ms]);
+
+  return {
+    flash,
+    ok: (text: string) => setFlash({ text, tone: "ok" }),
+    err: (text: string) => setFlash({ text, tone: "err" }),
+    clear: () => setFlash(null),
+  };
+}
 
 export function useDemoState(): DemoState {
   return useSyncExternalStore(
@@ -29,7 +50,8 @@ export function useHasPermission(permission: Permission) {
   const state = useDemoState();
   const session = state.session;
   if (!session) return false;
-  if (session.role === "super_admin") return false;
+  // Super Admin can preview every society action in the pitch demo.
+  if (session.role === "super_admin") return true;
   if (session.role === "resident") return false;
   if (session.role === "chairman") return true;
   const staff = state.staff.find((s) => s.id === session.staffId);

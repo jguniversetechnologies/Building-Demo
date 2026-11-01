@@ -69,6 +69,8 @@ export interface Resident {
   flatId: string;
   name: string;
   phone: string;
+  /** Demo invite / temp password — optional after committee invite */
+  inviteCode?: string | null;
 }
 
 export interface BillingConfig {
@@ -99,7 +101,7 @@ export interface Payment {
   flatId: string;
   billId: string;
   amount: number;
-  method: "upi" | "cash" | "bank";
+  method: "upi" | "cash" | "bank" | "cheque";
   note: string;
   createdAt: string;
 }
@@ -185,5 +187,5 @@ export const ROLE_PERMISSIONS: Record<
   ],
 };
 
-export const DEMO_STORAGE_KEY = "building-demo-v1";
-export const DEMO_STATE_VERSION = 1;
+export const DEMO_STORAGE_KEY = "building-demo-v4";
+export const DEMO_STATE_VERSION = 4;

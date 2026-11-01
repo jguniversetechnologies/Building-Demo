@@ -3,7 +3,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatINR, useDemoState } from "@/lib/demo/hooks";
-import { recordPayment, setSession } from "@/lib/demo/store";
+import {
+  outstandingForFlat,
+  recordPayment,
+  setSession,
+} from "@/lib/demo/store";
 
 export default function ResidentPayPage() {
   const router = useRouter();
@@ -27,6 +31,9 @@ export default function ResidentPayPage() {
   const maxDue = primary
     ? Math.max(0, primary.totalAmount - primary.paidAmount)
     : 0;
+  const totalOutstanding = resident
+    ? outstandingForFlat(resident.flatId)
+    : 0;
   const [amount, setAmount] = useState(0);
   const [doneAmount, setDoneAmount] = useState<number | null>(null);
   const [error, setError] = useState("");
@@ -35,7 +42,13 @@ export default function ResidentPayPage() {
     setAmount(maxDue);
   }, [maxDue, primary?.id]);
 
-  if (!resident) return <div className="p-5 text-sm">No resident session.</div>;
+  if (!resident) {
+    return (
+      <div className="p-5 text-sm text-slate-600">
+        Login with phone first.
+      </div>
+    );
+  }
 
   const society = state.societies.find((s) => s.id === resident.societyId);
   const treas = state.staff.find(
@@ -45,20 +58,32 @@ export default function ResidentPayPage() {
   return (
     <div className="space-y-4 p-5">
       <div className="rounded-2xl bg-white p-4 shadow-sm">
-        <p className="text-sm font-semibold">Pay with UPI</p>
+        <p className="text-sm font-semibold">Pay maintenance</p>
         <p className="mt-1 text-sm text-slate-600">
-          Pay full month or any custom amount against dues (Deepak #4). Demo
-          acknowledges payment instantly.
+          Enter any amount up to this bill. Oldest unpaid month is charged
+          first.
         </p>
+
+        <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
+          <div className="rounded-xl bg-slate-50 p-3">
+            <p className="text-xs text-slate-500">Total outstanding</p>
+            <p className="font-semibold">{formatINR(totalOutstanding)}</p>
+          </div>
+          <div className="rounded-xl bg-slate-50 p-3">
+            <p className="text-xs text-slate-500">Paying for</p>
+            <p className="font-semibold">
+              {primary ? primary.month : "—"}
+            </p>
+          </div>
+        </div>
 
         {primary ? (
           <>
             <p className="mt-4 text-xs uppercase text-slate-500">
-              Oldest open bill · {primary.month}
+              Amount for {primary.month} (max {formatINR(maxDue)})
             </p>
-            <p className="text-lg font-semibold">Due {formatINR(maxDue)}</p>
-            <label className="mt-4 block text-sm">
-              Amount (₹)
+            <label className="mt-1 block text-sm">
+              Pay amount (₹)
               <input
                 type="number"
                 min={1}
@@ -68,7 +93,7 @@ export default function ResidentPayPage() {
                 onChange={(e) => setAmount(Number(e.target.value))}
               />
             </label>
-            <div className="mt-3 flex gap-2">
+            <div className="mt-3 flex flex-wrap gap-2">
               <button
                 type="button"
                 className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs"
@@ -79,9 +104,16 @@ export default function ResidentPayPage() {
               <button
                 type="button"
                 className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs"
+                onClick={() => setAmount(Math.min(Math.floor(maxDue / 2), maxDue))}
+              >
+                Half
+              </button>
+              <button
+                type="button"
+                className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs"
                 onClick={() => setAmount(maxDue)}
               >
-                Full due
+                Full for {primary.month}
               </button>
             </div>
             <button
@@ -99,7 +131,7 @@ export default function ResidentPayPage() {
                   billId: primary.id,
                   amount,
                   method: "upi",
-                  note: "Resident UPI (demo ack)",
+                  note: "Resident UPI (demo)",
                 });
                 if (!payment) {
                   setError("Could not record payment");
@@ -108,7 +140,7 @@ export default function ResidentPayPage() {
                 setDoneAmount(payment.amount);
               }}
             >
-              Pay with any UPI
+              Pay {amount ? formatINR(amount) : ""} with UPI
             </button>
             {error ? (
               <p className="mt-2 text-sm text-rose-600">{error}</p>
@@ -116,10 +148,11 @@ export default function ResidentPayPage() {
             {doneAmount != null ? (
               <div className="mt-4 space-y-2 rounded-xl bg-teal-50 p-3 text-sm text-teal-950">
                 <p className="font-semibold">
-                  Payment acknowledged · {formatINR(doneAmount)}
+                  Payment done · {formatINR(doneAmount)}
                 </p>
                 <p>
-                  Ledger updated. Show clients the Treasurer screens next.
+                  Remaining outstanding:{" "}
+                  {formatINR(outstandingForFlat(resident.flatId))}
                 </p>
                 <div className="flex flex-col gap-2 pt-1">
                   <button
@@ -137,31 +170,14 @@ export default function ResidentPayPage() {
                       router.push(`/society/${society.slug}/payments`);
                     }}
                   >
-                    Open Treasurer → Payments (see reflect)
-                  </button>
-                  <button
-                    type="button"
-                    className="rounded-lg border border-teal-700 px-3 py-2 text-xs font-medium text-teal-900"
-                    onClick={() => {
-                      if (!society || !treas) return;
-                      setSession({
-                        role: "treasurer",
-                        societyId: society.id,
-                        staffId: treas.id,
-                        residentId: null,
-                        label: `Treasurer · ${treas.name}`,
-                      });
-                      router.push(`/society/${society.slug}/overdue`);
-                    }}
-                  >
-                    Open Overdue matrix
+                    Show Treasurer payments
                   </button>
                   <button
                     type="button"
                     className="text-xs underline"
                     onClick={() => router.push("/app/history")}
                   >
-                    View / print receipt history
+                    View receipt history
                   </button>
                 </div>
               </div>

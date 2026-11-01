@@ -1,9 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { PageCard } from "@/components/demo/Shell";
-import { formatINR, useDemoState, useHasPermission } from "@/lib/demo/hooks";
 import {
+  FlashBar,
+  GhostBtn,
+  PageCard,
+  RowActions,
+} from "@/components/demo/Shell";
+import {
+  formatINR,
+  useDemoState,
+  useFlash,
+  useHasPermission,
+} from "@/lib/demo/hooks";
+import {
+  deleteBill,
   generateBillsForMonth,
   publishBills,
   updateBillingConfig,
@@ -16,6 +27,7 @@ export default function BillingPage() {
   const society = state.societies.find((s) => s.slug === slug);
   const canEdit = useHasPermission("billing.manage");
   const [month, setMonth] = useState("2025-11");
+  const { flash, ok, err } = useFlash();
 
   if (!society) return null;
   const cfg = state.billingConfigs.find((c) => c.societyId === society.id);
@@ -26,6 +38,8 @@ export default function BillingPage() {
 
   return (
     <div className="space-y-4">
+      <FlashBar flash={flash} />
+
       <PageCard title="Billing config">
         <div className="flex flex-wrap gap-4 text-sm">
           <label>
@@ -35,12 +49,13 @@ export default function BillingPage() {
               disabled={!canEdit}
               className="ml-2 w-24 rounded-lg border border-slate-200 px-2 py-1"
               defaultValue={cfg?.latePenaltyAmount ?? 0}
-              onBlur={(e) =>
-                canEdit &&
+              onBlur={(e) => {
+                if (!canEdit) return;
                 updateBillingConfig(society.id, {
                   latePenaltyAmount: Number(e.target.value) || 0,
-                })
-              }
+                });
+                ok("Penalty updated");
+              }}
             />
           </label>
           <label>
@@ -50,12 +65,13 @@ export default function BillingPage() {
               disabled={!canEdit}
               className="ml-2 w-16 rounded-lg border border-slate-200 px-2 py-1"
               defaultValue={cfg?.dueDayOfMonth ?? 10}
-              onBlur={(e) =>
-                canEdit &&
+              onBlur={(e) => {
+                if (!canEdit) return;
                 updateBillingConfig(society.id, {
                   dueDayOfMonth: Number(e.target.value) || 10,
-                })
-              }
+                });
+                ok("Due day updated");
+              }}
             />
           </label>
         </div>
@@ -77,14 +93,20 @@ export default function BillingPage() {
             <button
               type="button"
               className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-              onClick={() => generateBillsForMonth(society.id, month)}
+              onClick={() => {
+                generateBillsForMonth(society.id, month);
+                ok(`Drafts ready for ${month}`);
+              }}
             >
               Generate drafts
             </button>
             <button
               type="button"
               className="rounded-lg bg-teal-700 px-3 py-2 text-sm text-white"
-              onClick={() => publishBills(society.id, month)}
+              onClick={() => {
+                publishBills(society.id, month);
+                ok(`Published ${month}`);
+              }}
             >
               Publish month
             </button>
@@ -105,7 +127,8 @@ export default function BillingPage() {
                 <th className="py-2 pr-3">Month</th>
                 <th className="py-2 pr-3">Total</th>
                 <th className="py-2 pr-3">Paid</th>
-                <th className="py-2">Status</th>
+                <th className="py-2 pr-3">Status</th>
+                {canEdit ? <th className="py-2">Actions</th> : null}
               </tr>
             </thead>
             <tbody>
@@ -117,7 +140,23 @@ export default function BillingPage() {
                     <td className="py-2 pr-3">{b.month}</td>
                     <td className="py-2 pr-3">{formatINR(b.totalAmount)}</td>
                     <td className="py-2 pr-3">{formatINR(b.paidAmount)}</td>
-                    <td className="py-2 capitalize">{b.status}</td>
+                    <td className="py-2 pr-3 capitalize">{b.status}</td>
+                    {canEdit ? (
+                      <td className="py-2">
+                        <RowActions>
+                          <GhostBtn
+                            danger
+                            onClick={() => {
+                              const res = deleteBill(b.id);
+                              if (!res.ok) err(res.error);
+                              else ok(`Deleted bill ${flat?.number} ${b.month}`);
+                            }}
+                          >
+                            Delete
+                          </GhostBtn>
+                        </RowActions>
+                      </td>
+                    ) : null}
                   </tr>
                 );
               })}

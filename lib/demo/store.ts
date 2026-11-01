@@ -14,7 +14,7 @@ import type {
   Society,
   StaffUser,
 } from "./types";
-import { DEMO_STORAGE_KEY, ROLE_PERMISSIONS } from "./types";
+import { DEMO_STATE_VERSION, DEMO_STORAGE_KEY, ROLE_PERMISSIONS } from "./types";
 
 type Listener = () => void;
 const listeners = new Set<Listener>();
@@ -42,6 +42,8 @@ function parseState(raw: string | null): DemoState | null {
   try {
     const parsed = JSON.parse(raw) as DemoState;
     if (!parsed?.societies || !Array.isArray(parsed.societies)) return null;
+    // Drop stale localStorage when seed schema version changes.
+    if (parsed.version !== DEMO_STATE_VERSION) return null;
     return parsed;
   } catch {
     return null;
@@ -130,13 +132,18 @@ export function createSociety(input: {
   chairmanEmail: string;
 }) {
   const state = readState();
+  const slug = input.slug.trim().toLowerCase();
+  if (!slug) throw new Error("Slug required");
+  if (state.societies.some((s) => s.slug === slug)) {
+    throw new Error(`Slug “${slug}” already exists`);
+  }
   const societyId = uid("soc");
   const buildingId = uid("bld");
   const staffId = uid("stf");
   const society: Society = {
     id: societyId,
     name: input.name,
-    slug: input.slug,
+    slug,
     address: input.address,
     city: input.city,
     status: "active",
@@ -228,12 +235,89 @@ export function addResident(input: {
   flatId: string;
   name: string;
   phone: string;
+  inviteCode?: string | null;
 }) {
   const state = readState();
-  const resident: Resident = { id: uid("res"), ...input };
+  const phone = normalizePhone(input.phone);
+  if (state.residents.some((r) => normalizePhone(r.phone) === phone)) {
+    throw new Error("This phone is already registered");
+  }
+  const resident: Resident = {
+    id: uid("res"),
+    societyId: input.societyId,
+    flatId: input.flatId,
+    name: input.name,
+    phone,
+    inviteCode: input.inviteCode ?? null,
+  };
   state.residents.push(resident);
   writeState(state);
   return resident;
+}
+
+export function normalizePhone(phone: string) {
+  return phone.replace(/\D/g, "").slice(-10);
+}
+
+/** Resident app login: phone (+ optional invite code for newly invited). */
+export function loginResidentByPhone(phone: string, inviteCode?: string) {
+  const state = readState();
+  const digits = normalizePhone(phone);
+  if (digits.length !== 10) {
+    return { ok: false as const, error: "Enter a valid 10-digit mobile number" };
+  }
+  const resident = state.residents.find(
+    (r) => normalizePhone(r.phone) === digits,
+  );
+  if (!resident) {
+    return {
+      ok: false as const,
+      error: "No resident found for this phone. Invite them first from Residents.",
+    };
+  }
+  if (resident.inviteCode) {
+    const code = (inviteCode ?? "").trim().toUpperCase();
+    if (!code) {
+      return {
+        ok: false as const,
+        error: "Enter the invite code given by the committee",
+      };
+    }
+    if (code !== resident.inviteCode.toUpperCase()) {
+      return { ok: false as const, error: "Invite code does not match" };
+    }
+  }
+  const flat = state.flats.find((f) => f.id === resident.flatId);
+  const society = state.societies.find((s) => s.id === resident.societyId);
+  const session: DemoSession = {
+    role: "resident",
+    societyId: resident.societyId,
+    staffId: null,
+    residentId: resident.id,
+    label: `Resident · ${resident.name} · ${flat?.number ?? ""}`,
+  };
+  state.session = session;
+  // First successful login clears invite requirement for smoother re-entry
+  if (resident.inviteCode) resident.inviteCode = null;
+  writeState(state);
+  return { ok: true as const, resident, society, session };
+}
+
+export function startResidentSession(residentId: string) {
+  const state = readState();
+  const resident = state.residents.find((r) => r.id === residentId);
+  if (!resident) return null;
+  const flat = state.flats.find((f) => f.id === resident.flatId);
+  const session: DemoSession = {
+    role: "resident",
+    societyId: resident.societyId,
+    staffId: null,
+    residentId: resident.id,
+    label: `Resident · ${resident.name} · ${flat?.number ?? ""}`,
+  };
+  state.session = session;
+  writeState(state);
+  return session;
 }
 
 export function addStaff(input: {
@@ -406,8 +490,239 @@ export function inviteResident(input: {
   phone: string;
 }) {
   const inviteCode = `CHS-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
-  const resident = addResident(input);
+  const resident = addResident({
+    ...input,
+    phone: normalizePhone(input.phone),
+    inviteCode,
+  });
   return { resident, inviteCode };
+}
+
+export function updateSociety(
+  societyId: string,
+  patch: Partial<Pick<Society, "name" | "address" | "city" | "status" | "plan">>,
+) {
+  const state = readState();
+  const society = state.societies.find((s) => s.id === societyId);
+  if (!society) return null;
+  Object.assign(society, patch);
+  writeState(state);
+  return society;
+}
+
+export function deleteSociety(societyId: string) {
+  const state = readState();
+  state.societies = state.societies.filter((s) => s.id !== societyId);
+  state.buildings = state.buildings.filter((b) => b.societyId !== societyId);
+  state.flatTypes = state.flatTypes.filter((t) => t.societyId !== societyId);
+  state.flats = state.flats.filter((f) => f.societyId !== societyId);
+  state.staff = state.staff.filter((s) => s.societyId !== societyId);
+  state.residents = state.residents.filter((r) => r.societyId !== societyId);
+  state.billingConfigs = state.billingConfigs.filter(
+    (c) => c.societyId !== societyId,
+  );
+  state.bills = state.bills.filter((b) => b.societyId !== societyId);
+  state.payments = state.payments.filter((p) => p.societyId !== societyId);
+  state.expenses = state.expenses.filter((e) => e.societyId !== societyId);
+  state.notices = state.notices.filter((n) => n.societyId !== societyId);
+  if (state.session?.societyId === societyId) state.session = null;
+  writeState(state);
+}
+
+export function renameBuilding(buildingId: string, name: string) {
+  const state = readState();
+  const building = state.buildings.find((b) => b.id === buildingId);
+  if (!building || !name.trim()) return null;
+  building.name = name.trim();
+  writeState(state);
+  return building;
+}
+
+export function deleteBuilding(buildingId: string) {
+  const state = readState();
+  const building = state.buildings.find((b) => b.id === buildingId);
+  if (!building) return { ok: false as const, error: "Not found" };
+  if (building.isMain) {
+    return { ok: false as const, error: "Main building can’t be deleted" };
+  }
+  if (state.flats.some((f) => f.buildingId === buildingId)) {
+    return {
+      ok: false as const,
+      error: "Move or delete flats in this wing first",
+    };
+  }
+  state.buildings = state.buildings.filter((b) => b.id !== buildingId);
+  for (const s of state.staff) {
+    if (s.buildingScopeIds?.includes(buildingId)) {
+      s.buildingScopeIds = s.buildingScopeIds.filter((id) => id !== buildingId);
+      if (s.buildingScopeIds.length === 0) s.buildingScopeIds = null;
+    }
+  }
+  writeState(state);
+  return { ok: true as const };
+}
+
+export function updateFlatType(
+  flatTypeId: string,
+  patch: Partial<Pick<FlatType, "name" | "monthlyRate">>,
+) {
+  const state = readState();
+  const ft = state.flatTypes.find((f) => f.id === flatTypeId);
+  if (!ft) return null;
+  Object.assign(ft, patch);
+  writeState(state);
+  return ft;
+}
+
+export function deleteFlatType(flatTypeId: string) {
+  const state = readState();
+  if (state.flats.some((f) => f.flatTypeId === flatTypeId)) {
+    return { ok: false as const, error: "Flats still use this type" };
+  }
+  state.flatTypes = state.flatTypes.filter((t) => t.id !== flatTypeId);
+  writeState(state);
+  return { ok: true as const };
+}
+
+export function updateFlat(
+  flatId: string,
+  patch: Partial<Pick<Flat, "number" | "buildingId" | "flatTypeId">>,
+) {
+  const state = readState();
+  const flat = state.flats.find((f) => f.id === flatId);
+  if (!flat) return null;
+  Object.assign(flat, patch);
+  writeState(state);
+  return flat;
+}
+
+export function deleteFlat(flatId: string) {
+  const state = readState();
+  if (state.residents.some((r) => r.flatId === flatId)) {
+    return { ok: false as const, error: "Remove residents from this flat first" };
+  }
+  state.flats = state.flats.filter((f) => f.id !== flatId);
+  state.bills = state.bills.filter((b) => b.flatId !== flatId);
+  state.payments = state.payments.filter((p) => p.flatId !== flatId);
+  writeState(state);
+  return { ok: true as const };
+}
+
+export function updateResident(
+  residentId: string,
+  patch: Partial<Pick<Resident, "name" | "phone" | "flatId">>,
+) {
+  const state = readState();
+  const resident = state.residents.find((r) => r.id === residentId);
+  if (!resident) return null;
+  const next = { ...patch };
+  if (next.phone) {
+    next.phone = normalizePhone(next.phone);
+    const clash = state.residents.find(
+      (r) =>
+        r.id !== residentId && normalizePhone(r.phone) === next.phone,
+    );
+    if (clash) throw new Error("This phone is already registered");
+  }
+  Object.assign(resident, next);
+  writeState(state);
+  return resident;
+}
+
+export function deleteResident(residentId: string) {
+  const state = readState();
+  state.residents = state.residents.filter((r) => r.id !== residentId);
+  if (state.session?.residentId === residentId) state.session = null;
+  writeState(state);
+}
+
+export function updateStaff(
+  staffId: string,
+  patch: Partial<
+    Pick<StaffUser, "name" | "phone" | "email" | "roleTemplate" | "buildingScopeIds">
+  >,
+) {
+  const state = readState();
+  const staff = state.staff.find((s) => s.id === staffId);
+  if (!staff) return null;
+  Object.assign(staff, patch);
+  if (patch.roleTemplate && !patch.buildingScopeIds) {
+    // keep existing scope unless role change clears manager scope
+    if (patch.roleTemplate !== "building_manager") staff.buildingScopeIds = null;
+  }
+  writeState(state);
+  return staff;
+}
+
+export function deleteStaff(staffId: string) {
+  const state = readState();
+  state.staff = state.staff.filter((s) => s.id !== staffId);
+  if (state.session?.staffId === staffId) state.session = null;
+  writeState(state);
+}
+
+export function updateExpense(
+  expenseId: string,
+  patch: Partial<Pick<Expense, "title" | "amount" | "category" | "month">>,
+) {
+  const state = readState();
+  const expense = state.expenses.find((e) => e.id === expenseId);
+  if (!expense) return null;
+  Object.assign(expense, patch);
+  writeState(state);
+  return expense;
+}
+
+export function deleteExpense(expenseId: string) {
+  const state = readState();
+  state.expenses = state.expenses.filter((e) => e.id !== expenseId);
+  writeState(state);
+}
+
+export function updateNotice(
+  noticeId: string,
+  patch: Partial<Pick<{ title: string; body: string }, "title" | "body">>,
+) {
+  const state = readState();
+  const notice = state.notices.find((n) => n.id === noticeId);
+  if (!notice) return null;
+  Object.assign(notice, patch);
+  writeState(state);
+  return notice;
+}
+
+export function deleteNotice(noticeId: string) {
+  const state = readState();
+  state.notices = state.notices.filter((n) => n.id !== noticeId);
+  writeState(state);
+}
+
+export function deletePayment(paymentId: string) {
+  const state = readState();
+  const payment = state.payments.find((p) => p.id === paymentId);
+  if (!payment) return;
+  const bill = state.bills.find((b) => b.id === payment.billId);
+  if (bill) {
+    bill.paidAmount = Math.max(0, bill.paidAmount - payment.amount);
+    bill.status = recomputeBillStatus(bill);
+  }
+  state.payments = state.payments.filter((p) => p.id !== paymentId);
+  writeState(state);
+}
+
+export function deleteBill(billId: string) {
+  const state = readState();
+  const bill = state.bills.find((b) => b.id === billId);
+  if (!bill) return { ok: false as const, error: "Not found" };
+  if (bill.paidAmount > 0 || state.payments.some((p) => p.billId === billId)) {
+    return {
+      ok: false as const,
+      error: "Bill has payments — remove payments first",
+    };
+  }
+  state.bills = state.bills.filter((b) => b.id !== billId);
+  writeState(state);
+  return { ok: true as const };
 }
 
 export function societyBySlug(slug: string) {

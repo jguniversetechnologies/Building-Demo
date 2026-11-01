@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 4,
   "societies": [
     {
       "id": "soc_shanti",
@@ -134,8 +134,13 @@
     { "id": "res_s201", "societyId": "soc_shanti", "flatId": "flt_s201", "name": "Vikram Rao", "phone": "9000000201" },
     { "id": "res_s202", "societyId": "soc_shanti", "flatId": "flt_s202", "name": "Pooja Nair", "phone": "9000000202" },
     { "id": "res_ga101", "societyId": "soc_green", "flatId": "flt_ga101", "name": "Rahul Verma", "phone": "9000001101" },
+    { "id": "res_ga102", "societyId": "soc_green", "flatId": "flt_ga102", "name": "Sneha Kulkarni", "phone": "9000001102" },
+    { "id": "res_ga201", "societyId": "soc_green", "flatId": "flt_ga201", "name": "Arjun Desai", "phone": "9000001201" },
+    { "id": "res_ga202", "societyId": "soc_green", "flatId": "flt_ga202", "name": "Isha Patel", "phone": "9000001202" },
     { "id": "res_gb101", "societyId": "soc_green", "flatId": "flt_gb101", "name": "Neha Kapoor", "phone": "9000002101" },
-    { "id": "res_gb201", "societyId": "soc_green", "flatId": "flt_gb201", "name": "Sanjay Gupta", "phone": "9000002201" }
+    { "id": "res_gb102", "societyId": "soc_green", "flatId": "flt_gb102", "name": "Rohit Malhotra", "phone": "9000002102" },
+    { "id": "res_gb201", "societyId": "soc_green", "flatId": "flt_gb201", "name": "Sanjay Gupta", "phone": "9000002201" },
+    { "id": "res_gb202", "societyId": "soc_green", "flatId": "flt_gb202", "name": "Anita Bose", "phone": "9000002202" }
   ],
   "billingConfigs": [
     { "societyId": "soc_shanti", "latePenaltyAmount": 200, "dueDayOfMonth": 10 },
@@ -145,31 +150,45 @@
     { "id": "bill_s101_08", "societyId": "soc_shanti", "flatId": "flt_s101", "month": "2025-08", "maintenanceAmount": 3500, "previousDue": 0, "penalty": 0, "totalAmount": 3500, "paidAmount": 3500, "status": "paid", "publishedAt": "2025-08-01T09:00:00.000Z" },
     { "id": "bill_s101_09", "societyId": "soc_shanti", "flatId": "flt_s101", "month": "2025-09", "maintenanceAmount": 3500, "previousDue": 0, "penalty": 0, "totalAmount": 3500, "paidAmount": 3500, "status": "paid", "publishedAt": "2025-09-01T09:00:00.000Z" },
     { "id": "bill_s101_10", "societyId": "soc_shanti", "flatId": "flt_s101", "month": "2025-10", "maintenanceAmount": 3500, "previousDue": 0, "penalty": 0, "totalAmount": 3500, "paidAmount": 1000, "status": "partial", "publishedAt": "2025-10-01T09:00:00.000Z" },
-    { "id": "bill_s102_10", "societyId": "soc_shanti", "flatId": "flt_s102", "month": "2025-10", "maintenanceAmount": 3500, "previousDue": 3500, "penalty": 200, "totalAmount": 7200, "paidAmount": 0, "status": "overdue", "publishedAt": "2025-10-01T09:00:00.000Z" },
+    { "id": "bill_s102_10", "societyId": "soc_shanti", "flatId": "flt_s102", "month": "2025-10", "maintenanceAmount": 3500, "previousDue": 0, "penalty": 200, "totalAmount": 3700, "paidAmount": 0, "status": "overdue", "publishedAt": "2025-10-01T09:00:00.000Z" },
     { "id": "bill_s201_10", "societyId": "soc_shanti", "flatId": "flt_s201", "month": "2025-10", "maintenanceAmount": 4500, "previousDue": 0, "penalty": 0, "totalAmount": 4500, "paidAmount": 4500, "status": "paid", "publishedAt": "2025-10-01T09:00:00.000Z" },
-    { "id": "bill_gb101_08", "societyId": "soc_green", "flatId": "flt_gb101", "month": "2025-08", "maintenanceAmount": 4000, "previousDue": 0, "penalty": 0, "totalAmount": 4000, "paidAmount": 0, "status": "overdue", "publishedAt": "2025-08-01T09:00:00.000Z" },
-    { "id": "bill_gb101_09", "societyId": "soc_green", "flatId": "flt_gb101", "month": "2025-09", "maintenanceAmount": 4000, "previousDue": 4000, "penalty": 300, "totalAmount": 8300, "paidAmount": 0, "status": "overdue", "publishedAt": "2025-09-01T09:00:00.000Z" },
-    { "id": "bill_gb101_10", "societyId": "soc_green", "flatId": "flt_gb101", "month": "2025-10", "maintenanceAmount": 4000, "previousDue": 8300, "penalty": 300, "totalAmount": 12600, "paidAmount": 0, "status": "overdue", "publishedAt": "2025-10-01T09:00:00.000Z" },
+    { "id": "bill_s202_10", "societyId": "soc_shanti", "flatId": "flt_s202", "month": "2025-10", "maintenanceAmount": 4500, "previousDue": 0, "penalty": 0, "totalAmount": 4500, "paidAmount": 4500, "status": "paid", "publishedAt": "2025-10-01T09:00:00.000Z" },
+
     { "id": "bill_ga101_10", "societyId": "soc_green", "flatId": "flt_ga101", "month": "2025-10", "maintenanceAmount": 4000, "previousDue": 0, "penalty": 0, "totalAmount": 4000, "paidAmount": 4000, "status": "paid", "publishedAt": "2025-10-01T09:00:00.000Z" },
-    { "id": "bill_gb201_10", "societyId": "soc_green", "flatId": "flt_gb201", "month": "2025-10", "maintenanceAmount": 5500, "previousDue": 0, "penalty": 0, "totalAmount": 5500, "paidAmount": 2000, "status": "partial", "publishedAt": "2025-10-01T09:00:00.000Z" }
+    { "id": "bill_ga102_10", "societyId": "soc_green", "flatId": "flt_ga102", "month": "2025-10", "maintenanceAmount": 4000, "previousDue": 0, "penalty": 0, "totalAmount": 4000, "paidAmount": 4000, "status": "paid", "publishedAt": "2025-10-01T09:00:00.000Z" },
+    { "id": "bill_ga201_10", "societyId": "soc_green", "flatId": "flt_ga201", "month": "2025-10", "maintenanceAmount": 5500, "previousDue": 0, "penalty": 0, "totalAmount": 5500, "paidAmount": 0, "status": "published", "publishedAt": "2025-10-01T09:00:00.000Z" },
+    { "id": "bill_ga202_10", "societyId": "soc_green", "flatId": "flt_ga202", "month": "2025-10", "maintenanceAmount": 5500, "previousDue": 0, "penalty": 0, "totalAmount": 5500, "paidAmount": 2000, "status": "partial", "publishedAt": "2025-10-01T09:00:00.000Z" },
+
+    { "id": "bill_gb101_08", "societyId": "soc_green", "flatId": "flt_gb101", "month": "2025-08", "maintenanceAmount": 4000, "previousDue": 0, "penalty": 0, "totalAmount": 4000, "paidAmount": 0, "status": "overdue", "publishedAt": "2025-08-01T09:00:00.000Z" },
+    { "id": "bill_gb101_09", "societyId": "soc_green", "flatId": "flt_gb101", "month": "2025-09", "maintenanceAmount": 4000, "previousDue": 0, "penalty": 0, "totalAmount": 4000, "paidAmount": 0, "status": "overdue", "publishedAt": "2025-09-01T09:00:00.000Z" },
+    { "id": "bill_gb101_10", "societyId": "soc_green", "flatId": "flt_gb101", "month": "2025-10", "maintenanceAmount": 4000, "previousDue": 0, "penalty": 300, "totalAmount": 4300, "paidAmount": 0, "status": "overdue", "publishedAt": "2025-10-01T09:00:00.000Z" },
+    { "id": "bill_gb102_10", "societyId": "soc_green", "flatId": "flt_gb102", "month": "2025-10", "maintenanceAmount": 4000, "previousDue": 0, "penalty": 0, "totalAmount": 4000, "paidAmount": 4000, "status": "paid", "publishedAt": "2025-10-01T09:00:00.000Z" },
+    { "id": "bill_gb201_10", "societyId": "soc_green", "flatId": "flt_gb201", "month": "2025-10", "maintenanceAmount": 5500, "previousDue": 0, "penalty": 0, "totalAmount": 5500, "paidAmount": 2000, "status": "partial", "publishedAt": "2025-10-01T09:00:00.000Z" },
+    { "id": "bill_gb202_10", "societyId": "soc_green", "flatId": "flt_gb202", "month": "2025-10", "maintenanceAmount": 5500, "previousDue": 0, "penalty": 300, "totalAmount": 5800, "paidAmount": 0, "status": "overdue", "publishedAt": "2025-10-01T09:00:00.000Z" }
   ],
   "payments": [
     { "id": "pay_1", "societyId": "soc_shanti", "flatId": "flt_s101", "billId": "bill_s101_08", "amount": 3500, "method": "upi", "note": "August full", "createdAt": "2025-08-05T11:00:00.000Z" },
     { "id": "pay_2", "societyId": "soc_shanti", "flatId": "flt_s101", "billId": "bill_s101_09", "amount": 3500, "method": "upi", "note": "September full", "createdAt": "2025-09-04T11:00:00.000Z" },
     { "id": "pay_3", "societyId": "soc_shanti", "flatId": "flt_s101", "billId": "bill_s101_10", "amount": 1000, "method": "upi", "note": "Partial Oct", "createdAt": "2025-10-08T11:00:00.000Z" },
     { "id": "pay_4", "societyId": "soc_shanti", "flatId": "flt_s201", "billId": "bill_s201_10", "amount": 4500, "method": "bank", "note": "October full", "createdAt": "2025-10-03T11:00:00.000Z" },
-    { "id": "pay_5", "societyId": "soc_green", "flatId": "flt_ga101", "billId": "bill_ga101_10", "amount": 4000, "method": "upi", "note": "October full", "createdAt": "2025-10-02T11:00:00.000Z" },
-    { "id": "pay_6", "societyId": "soc_green", "flatId": "flt_gb201", "billId": "bill_gb201_10", "amount": 2000, "method": "upi", "note": "Partial Oct", "createdAt": "2025-10-12T11:00:00.000Z" }
+    { "id": "pay_5", "societyId": "soc_shanti", "flatId": "flt_s202", "billId": "bill_s202_10", "amount": 4500, "method": "upi", "note": "October full", "createdAt": "2025-10-04T11:00:00.000Z" },
+    { "id": "pay_6", "societyId": "soc_green", "flatId": "flt_ga101", "billId": "bill_ga101_10", "amount": 4000, "method": "upi", "note": "October full", "createdAt": "2025-10-02T11:00:00.000Z" },
+    { "id": "pay_7", "societyId": "soc_green", "flatId": "flt_ga102", "billId": "bill_ga102_10", "amount": 4000, "method": "upi", "note": "October full", "createdAt": "2025-10-03T11:00:00.000Z" },
+    { "id": "pay_8", "societyId": "soc_green", "flatId": "flt_ga202", "billId": "bill_ga202_10", "amount": 2000, "method": "cash", "note": "Partial Oct", "createdAt": "2025-10-11T11:00:00.000Z" },
+    { "id": "pay_9", "societyId": "soc_green", "flatId": "flt_gb102", "billId": "bill_gb102_10", "amount": 4000, "method": "upi", "note": "October full", "createdAt": "2025-10-05T11:00:00.000Z" },
+    { "id": "pay_10", "societyId": "soc_green", "flatId": "flt_gb201", "billId": "bill_gb201_10", "amount": 2000, "method": "upi", "note": "Partial Oct", "createdAt": "2025-10-12T11:00:00.000Z" }
   ],
   "expenses": [
     { "id": "exp_1", "societyId": "soc_shanti", "month": "2025-10", "title": "Lift AMC", "amount": 8000, "category": "Maintenance", "createdAt": "2025-10-05T10:00:00.000Z" },
     { "id": "exp_2", "societyId": "soc_shanti", "month": "2025-10", "title": "Security salary", "amount": 25000, "category": "Staff", "createdAt": "2025-10-06T10:00:00.000Z" },
     { "id": "exp_3", "societyId": "soc_green", "month": "2025-10", "title": "Garden contract", "amount": 12000, "category": "Amenities", "createdAt": "2025-10-04T10:00:00.000Z" },
-    { "id": "exp_4", "societyId": "soc_green", "month": "2025-10", "title": "Water tanker", "amount": 4500, "category": "Utilities", "createdAt": "2025-10-09T10:00:00.000Z" }
+    { "id": "exp_4", "societyId": "soc_green", "month": "2025-10", "title": "Water tanker", "amount": 4500, "category": "Utilities", "createdAt": "2025-10-09T10:00:00.000Z" },
+    { "id": "exp_5", "societyId": "soc_green", "month": "2025-10", "title": "Security salary", "amount": 28000, "category": "Staff", "createdAt": "2025-10-07T10:00:00.000Z" }
   ],
   "notices": [
     { "id": "ntc_1", "societyId": "soc_shanti", "title": "Diwali water schedule", "body": "Water supply 6–9 AM and 6–9 PM during festival week.", "createdAt": "2025-10-20T08:00:00.000Z" },
-    { "id": "ntc_2", "societyId": "soc_green", "title": "AGM on 15 Nov", "body": "Annual general meeting in Wing A lobby at 11 AM.", "createdAt": "2025-10-18T08:00:00.000Z" }
+    { "id": "ntc_2", "societyId": "soc_green", "title": "AGM on 15 Nov", "body": "Annual general meeting in Wing A lobby at 11 AM.", "createdAt": "2025-10-18T08:00:00.000Z" },
+    { "id": "ntc_3", "societyId": "soc_green", "title": "Maintenance due by 7th", "body": "Please clear October dues. Late fee ₹300 after due date.", "createdAt": "2025-10-01T08:00:00.000Z" }
   ],
   "session": null
 }

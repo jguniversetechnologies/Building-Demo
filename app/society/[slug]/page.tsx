@@ -12,7 +12,16 @@ export default function SocietyDashboardPage() {
   if (!society) return null;
 
   const sid = society.id;
-  const month = "2025-10";
+  const months = [
+    ...new Set([
+      ...state.bills.filter((b) => b.societyId === sid).map((b) => b.month),
+      ...state.expenses.filter((e) => e.societyId === sid).map((e) => e.month),
+      ...state.payments
+        .filter((p) => p.societyId === sid)
+        .map((p) => p.createdAt.slice(0, 7)),
+    ]),
+  ].sort();
+  const month = months.at(-1) ?? "2025-10";
   const collected = state.payments
     .filter((p) => p.societyId === sid && p.createdAt.startsWith(month))
     .reduce((s, p) => s + p.amount, 0);
@@ -36,9 +45,9 @@ export default function SocietyDashboardPage() {
     <div className="space-y-4">
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Stat label="Flats" value={String(flats)} />
-        <Stat label="Collected (Oct)" value={formatINR(collected)} />
+        <Stat label={`Collected (${month})`} value={formatINR(collected)} />
         <Stat label="Outstanding" value={formatINR(overdue)} />
-        <Stat label="Expenses (Oct)" value={formatINR(expenses)} />
+        <Stat label={`Expenses (${month})`} value={formatINR(expenses)} />
       </div>
 
       <PageCard title="Month maintenance tracker (Deepak #1)">
