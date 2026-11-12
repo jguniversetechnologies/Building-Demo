@@ -8,9 +8,10 @@ import { useDemoState } from "@/lib/demo/hooks";
 
 const tabs = [
   { href: "/app", label: "Home" },
-  { href: "/app/bill", label: "Bill" },
-  { href: "/app/pay", label: "Pay" },
-  { href: "/app/history", label: "History" },
+  { href: "/app/pay", label: "Payments" },
+  { href: "/app/complaints", label: "Complaints" },
+  { href: "/app/notices", label: "Notices" },
+  { href: "/app/profile", label: "Profile" },
 ];
 
 function tabActive(pathname: string, href: string) {
@@ -106,7 +107,7 @@ export default function ResidentAppLayout({
           )}
         </div>
         {showChrome ? (
-          <nav className="no-print grid shrink-0 grid-cols-4 border-t border-slate-200 bg-white">
+          <nav className="no-print grid shrink-0 grid-cols-5 border-t border-slate-200 bg-white">
             {tabs.map((tab) => {
               const active = tabActive(pathname, tab.href);
               return (

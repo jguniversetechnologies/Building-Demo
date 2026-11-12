@@ -31,7 +31,7 @@ export function TopBar({
       <div className="flex flex-wrap items-center gap-2">
         <Link
           href="/"
-          className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-50"
+          className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-50 cursor-pointer"
         >
           Pitch home
         </Link>
@@ -42,7 +42,7 @@ export function TopBar({
         ) : null}
         <button
           type="button"
-          className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-50"
+          className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-50 cursor-pointer"
           onClick={() => {
             resetDemoData();
             router.push("/");
@@ -52,7 +52,7 @@ export function TopBar({
         </button>
         <button
           type="button"
-          className="rounded-lg bg-slate-900 px-3 py-1.5 text-xs text-white hover:bg-slate-800"
+          className="rounded-lg bg-slate-900 px-3 py-1.5 text-xs text-white hover:bg-slate-800 cursor-pointer"
           onClick={() => {
             clearSession();
             router.push("/");
@@ -190,21 +190,23 @@ export function GhostBtn({
   onClick,
   danger,
   type = "button",
+  className,
 }: {
   children: React.ReactNode;
   onClick?: () => void;
   danger?: boolean;
   type?: "button" | "submit";
+  className?: string;
 }) {
   return (
     <button
       type={type}
       onClick={onClick}
-      className={`rounded-md px-2 py-1 text-xs font-medium transition ${
+      className={`rounded-md px-2 py-1 text-xs font-medium transition cursor-pointer ${
         danger
           ? "text-rose-700 hover:bg-rose-50"
           : "text-teal-800 hover:bg-teal-50"
-      }`}
+      } ${className || ""}`}
     >
       {children}
     </button>

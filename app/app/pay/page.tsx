@@ -1,12 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatINR, useDemoState } from "@/lib/demo/hooks";
 import {
   outstandingForFlat,
   recordPayment,
-  setSession,
 } from "@/lib/demo/store";
 
 export default function ResidentPayPage() {
@@ -24,23 +23,20 @@ export default function ResidentPayPage() {
           b.status !== "draft" &&
           b.totalAmount - b.paidAmount > 0,
       )
-      .sort((a, b) => a.month.localeCompare(b.month));
+      .sort((a, b) => a.month.localeCompare(b.month)); // Oldest first
   }, [resident, state.bills]);
 
   const primary = openBills[0];
-  const maxDue = primary
-    ? Math.max(0, primary.totalAmount - primary.paidAmount)
-    : 0;
+  const maxDue = useMemo(() => {
+    return primary
+      ? Math.max(0, primary.totalAmount - primary.paidAmount)
+      : 0;
+  }, [primary]);
   const totalOutstanding = resident
     ? outstandingForFlat(resident.flatId)
     : 0;
-  const [amount, setAmount] = useState(0);
-  const [doneAmount, setDoneAmount] = useState<number | null>(null);
+  const [amount, setAmount] = useState(() => maxDue);
   const [error, setError] = useState("");
-
-  useEffect(() => {
-    setAmount(maxDue);
-  }, [maxDue, primary?.id]);
 
   if (!resident) {
     return (
@@ -50,28 +46,22 @@ export default function ResidentPayPage() {
     );
   }
 
-  const society = state.societies.find((s) => s.id === resident.societyId);
-  const treas = state.staff.find(
-    (s) => s.societyId === resident.societyId && s.roleTemplate === "treasurer",
-  );
-
   return (
     <div className="space-y-4 p-5">
-      <div className="rounded-2xl bg-white p-4 shadow-sm">
-        <p className="text-sm font-semibold">Pay maintenance</p>
+      <div className="rounded-2xl bg-white p-5 shadow-sm">
+        <h3 className="text-lg font-semibold text-slate-900">Pay Maintenance</h3>
         <p className="mt-1 text-sm text-slate-600">
-          Enter any amount up to this bill. Oldest unpaid month is charged
-          first.
+          Enter any amount up to this bill. Oldest unpaid month is charged first.
         </p>
 
-        <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
-          <div className="rounded-xl bg-slate-50 p-3">
+        <div className="mt-4 grid grid-cols-2 gap-3">
+          <div className="rounded-xl bg-slate-50 p-4">
             <p className="text-xs text-slate-500">Total outstanding</p>
-            <p className="font-semibold">{formatINR(totalOutstanding)}</p>
+            <p className="mt-1 text-xl font-semibold text-slate-900">{formatINR(totalOutstanding)}</p>
           </div>
-          <div className="rounded-xl bg-slate-50 p-3">
-            <p className="text-xs text-slate-500">Paying for</p>
-            <p className="font-semibold">
+          <div className="rounded-xl bg-teal-50 p-4">
+            <p className="text-xs text-teal-600">Paying for</p>
+            <p className="mt-1 text-xl font-semibold text-teal-900">
               {primary ? primary.month : "—"}
             </p>
           </div>
@@ -79,46 +69,47 @@ export default function ResidentPayPage() {
 
         {primary ? (
           <>
-            <p className="mt-4 text-xs uppercase text-slate-500">
-              Amount for {primary.month} (max {formatINR(maxDue)})
-            </p>
-            <label className="mt-1 block text-sm">
-              Pay amount (₹)
+            <div className="mt-6">
+              <label className="mb-2 block text-sm font-medium text-slate-700">
+                Amount for {primary.month} (max {formatINR(maxDue)})
+              </label>
               <input
                 type="number"
                 min={1}
                 max={maxDue}
-                className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-3 text-lg"
+                className="w-full rounded-xl border border-slate-200 px-4 py-3 text-lg"
                 value={amount || ""}
                 onChange={(e) => setAmount(Number(e.target.value))}
               />
-            </label>
+            </div>
+
             <div className="mt-3 flex flex-wrap gap-2">
               <button
                 type="button"
-                className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs"
+                className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm hover:bg-slate-50 cursor-pointer"
                 onClick={() => setAmount(Math.min(1000, maxDue))}
               >
                 ₹1,000
               </button>
               <button
                 type="button"
-                className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs"
+                className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm hover:bg-slate-50 cursor-pointer"
                 onClick={() => setAmount(Math.min(Math.floor(maxDue / 2), maxDue))}
               >
                 Half
               </button>
               <button
                 type="button"
-                className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs"
+                className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm hover:bg-slate-50 cursor-pointer"
                 onClick={() => setAmount(maxDue)}
               >
                 Full for {primary.month}
               </button>
             </div>
+
             <button
               type="button"
-              className="mt-5 w-full rounded-xl bg-teal-700 py-3 text-sm font-medium text-white"
+              className="mt-5 w-full rounded-xl bg-gradient-to-r from-teal-600 to-teal-700 py-4 text-sm font-medium text-white shadow-md hover:from-teal-700 hover:to-teal-800"
               onClick={() => {
                 setError("");
                 if (!amount || amount <= 0) {
@@ -137,54 +128,19 @@ export default function ResidentPayPage() {
                   setError("Could not record payment");
                   return;
                 }
-                setDoneAmount(payment.amount);
+                router.push(`/app/pay/success?amount=${amount}`);
               }}
             >
-              Pay {amount ? formatINR(amount) : ""} with UPI
+              💳 Pay {amount ? formatINR(amount) : ""} with UPI
             </button>
             {error ? (
-              <p className="mt-2 text-sm text-rose-600">{error}</p>
-            ) : null}
-            {doneAmount != null ? (
-              <div className="mt-4 space-y-2 rounded-xl bg-teal-50 p-3 text-sm text-teal-950">
-                <p className="font-semibold">
-                  Payment done · {formatINR(doneAmount)}
-                </p>
-                <p>
-                  Remaining outstanding:{" "}
-                  {formatINR(outstandingForFlat(resident.flatId))}
-                </p>
-                <div className="flex flex-col gap-2 pt-1">
-                  <button
-                    type="button"
-                    className="rounded-lg bg-teal-800 px-3 py-2 text-xs font-medium text-white"
-                    onClick={() => {
-                      if (!society || !treas) return;
-                      setSession({
-                        role: "treasurer",
-                        societyId: society.id,
-                        staffId: treas.id,
-                        residentId: null,
-                        label: `Treasurer · ${treas.name}`,
-                      });
-                      router.push(`/society/${society.slug}/payments`);
-                    }}
-                  >
-                    Show Treasurer payments
-                  </button>
-                  <button
-                    type="button"
-                    className="text-xs underline"
-                    onClick={() => router.push("/app/history")}
-                  >
-                    View receipt history
-                  </button>
-                </div>
-              </div>
+              <p className="mt-3 text-sm text-rose-600 text-center">{error}</p>
             ) : null}
           </>
         ) : (
-          <p className="mt-4 text-sm text-slate-500">No open dues. All clear.</p>
+          <div className="mt-4 rounded-xl border border-dashed border-green-200 bg-green-50 p-6 text-center">
+            <p className="text-sm text-green-800">✓ No open dues. All clear!</p>
+          </div>
         )}
       </div>
     </div>

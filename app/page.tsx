@@ -177,7 +177,7 @@ export default function HomePage() {
               key={card.title}
               type="button"
               onClick={() => enter(card)}
-              className={`rounded-2xl bg-gradient-to-br ${card.accent} p-4 text-left text-white shadow-lg transition hover:-translate-y-1`}
+              className={`rounded-2xl bg-gradient-to-br ${card.accent} p-4 text-left text-white shadow-lg transition hover:-translate-y-1 cursor-pointer cursor-pointer`}
             >
               <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-white/20 text-sm font-bold">
                 {card.step}
@@ -199,7 +199,7 @@ export default function HomePage() {
               key={card.title}
               type="button"
               onClick={() => enter(card)}
-              className="rounded-2xl border border-slate-200 bg-white p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-teal-600 hover:shadow-md"
+              className="rounded-2xl border border-slate-200 bg-white p-5 text-left shadow-sm transition hover:-translate-y-0.5 cursor-pointer hover:border-teal-600 hover:shadow-md cursor-pointer"
             >
               <h3 className="text-lg font-semibold text-slate-900">
                 {card.title}

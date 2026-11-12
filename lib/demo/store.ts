@@ -222,6 +222,7 @@ export function addFlat(input: {
   buildingId: string;
   number: string;
   flatTypeId: string;
+  customRate?: number | null;
 }) {
   const state = readState();
   const flat: Flat = { id: uid("flt"), ...input };
@@ -390,7 +391,8 @@ export function generateBillsForMonth(societyId: string, month: string) {
       (b) => b.flatId === flat.id && b.month === month,
     );
     if (exists) continue;
-    const rate = types.get(flat.flatTypeId)?.monthlyRate ?? 0;
+    // Use custom rate if set, otherwise fall back to flat type rate
+    const rate = flat.customRate ?? types.get(flat.flatTypeId)?.monthlyRate ?? 0;
     // Sum only each prior month's own charges still unpaid — avoids double-counting.
     const prior = state.bills
       .filter(
@@ -461,6 +463,55 @@ export function deleteMonthBills(societyId: string, month: string) {
   state.bills = state.bills.filter((b) => !ids.has(b.id));
   writeState(state);
   return { ok: true as const, removed: monthBills.length };
+}
+
+/** Regenerate bills for a month with current flat rates (custom or type) */
+export function regenerateBillsForMonth(societyId: string, month: string) {
+  const state = readState();
+  const flats = state.flats.filter((f) => f.societyId === societyId);
+  const types = new Map(
+    state.flatTypes.filter((t) => t.societyId === societyId).map((t) => [t.id, t]),
+  );
+  const cfg = state.billingConfigs.find((c) => c.societyId === societyId);
+  const penalty = cfg?.latePenaltyAmount ?? 0;
+
+  let updated = 0;
+  let changed = 0;
+
+  for (const flat of flats) {
+    const bill = state.bills.find(
+      (b) => b.flatId === flat.id && b.month === month,
+    );
+    if (!bill) continue;
+
+    // Get current effective rate (custom or type)
+    const newRate = flat.customRate ?? types.get(flat.flatTypeId)?.monthlyRate ?? 0;
+    const oldRate = bill.maintenanceAmount;
+
+    // If rate hasn't changed, skip
+    if (newRate === oldRate) {
+      updated++;
+      continue;
+    }
+
+    // Recalculate: preserve previousDue, recalculate penalty, update total
+    const prior = bill.previousDue;
+    const late = prior > 0 ? penalty : 0;
+    const newTotal = newRate + prior + late;
+
+    bill.maintenanceAmount = newRate;
+    bill.totalAmount = newTotal;
+    // Re-evaluate status
+    if (bill.status === "paid" && bill.paidAmount < newTotal) {
+      bill.status = bill.paidAmount > 0 ? "partial" : "published";
+    }
+
+    changed++;
+    updated++;
+  }
+
+  writeState(state);
+  return { updated, changed, month };
 }
 
 export function recordPayment(input: {
@@ -631,7 +682,7 @@ export function deleteFlatType(flatTypeId: string) {
 
 export function updateFlat(
   flatId: string,
-  patch: Partial<Pick<Flat, "number" | "buildingId" | "flatTypeId">>,
+  patch: Partial<Pick<Flat, "number" | "buildingId" | "flatTypeId" | "customRate">>,
 ) {
   const state = readState();
   const flat = state.flats.find((f) => f.id === flatId);
@@ -697,6 +748,15 @@ export function updateStaff(
   }
   writeState(state);
   return staff;
+}
+
+/** Get the effective monthly rate for a flat (custom rate or flat type rate) */
+export function getFlatRate(flat: Flat, flatTypes: FlatType[]): number {
+  if (flat.customRate !== null && flat.customRate !== undefined) {
+    return flat.customRate;
+  }
+  const type = flatTypes.find((t) => t.id === flat.flatTypeId);
+  return type?.monthlyRate ?? 0;
 }
 
 export function deleteStaff(staffId: string) {

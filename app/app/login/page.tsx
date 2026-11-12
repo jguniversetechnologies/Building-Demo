@@ -65,113 +65,141 @@ export default function ResidentLoginPage() {
   };
 
   return (
-    <div className="space-y-4 p-5">
-      <div className="rounded-2xl bg-white p-4 shadow-sm">
-        <p className="text-xs font-semibold uppercase tracking-wide text-teal-800">
-          Resident login
-        </p>
-        <h2 className="mt-1 text-xl font-semibold text-slate-900">
-          Login with mobile number
-        </h2>
-        <p className="mt-1 text-sm text-slate-600">
-          Same phone the secretary saved when inviting you. Demo OTP:{" "}
-          <strong>{DEMO_OTP}</strong>
-        </p>
+    <div className="flex min-h-full flex-col items-center justify-center px-5 py-8">
+      {/* Logo/Brand */}
+      <div className="mb-6 text-center">
+        <div className="mb-2 inline-flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-teal-500 to-teal-700 text-white shadow-lg">
+          <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+          </svg>
+        </div>
+        <h1 className="text-2xl font-bold text-slate-900">Society Shastra</h1>
+        <p className="text-sm text-slate-500">Welcome back</p>
+      </div>
 
+      {/* Login Card */}
+      <div className="w-full rounded-2xl bg-white p-6 shadow-lg">
         {step === "phone" ? (
           <form
-            className="mt-4 space-y-3"
+            className="space-y-4"
             onSubmit={(e) => {
               e.preventDefault();
               sendOtp();
             }}
           >
-            <label className="block text-sm">
-              Mobile number
+            <div>
+              <label className="mb-1 block text-sm font-medium text-slate-700">
+                Mobile Number / Email
+              </label>
               <input
                 inputMode="numeric"
                 autoComplete="tel"
-                className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-3 text-lg tracking-wide"
-                placeholder="10-digit phone"
+                className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                placeholder="Enter mobile number"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
               />
-            </label>
+            </div>
             <button
               type="submit"
-              className="w-full rounded-xl bg-teal-700 py-3 text-sm font-medium text-white"
+              className="w-full rounded-xl bg-gradient-to-r from-teal-600 to-teal-700 py-3 text-sm font-semibold text-white shadow-md transition hover:from-teal-700 hover:to-teal-800"
             >
-              Send OTP
+              Login
             </button>
           </form>
         ) : (
           <form
-            className="mt-4 space-y-3"
+            className="space-y-4"
             onSubmit={(e) => {
               e.preventDefault();
               verifyAndEnter();
             }}
           >
-            <p className="text-sm text-slate-600">
-              OTP sent to <strong>{normalizePhone(phone)}</strong>
-              {matched ? ` · ${matched.name}` : ""}
-            </p>
-            <label className="block text-sm">
-              OTP
+            <div className="mb-4 rounded-lg bg-teal-50 px-4 py-3 text-sm text-teal-800">
+              <p className="font-medium">OTP sent to {normalizePhone(phone)}</p>
+              {matched && <p className="text-teal-600">{matched.name}</p>}
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-slate-700">
+                Enter OTP
+              </label>
               <input
                 inputMode="numeric"
-                className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-3 text-lg tracking-[0.3em]"
+                className="w-full rounded-xl border border-slate-300 px-4 py-3 text-center text-lg tracking-[0.3em] focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
                 placeholder={DEMO_OTP}
                 value={otp}
                 onChange={(e) => setOtp(e.target.value)}
                 autoFocus
               />
-            </label>
+              <p className="mt-1 text-xs text-slate-500">Demo OTP: {DEMO_OTP}</p>
+            </div>
             {matched?.inviteCode ? (
-              <label className="block text-sm">
-                Invite code (from committee)
+              <div>
+                <label className="mb-1 block text-sm font-medium text-slate-700">
+                  Invite Code
+                </label>
                 <input
-                  className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-3 font-mono text-sm uppercase"
+                  className="w-full rounded-xl border border-slate-300 px-4 py-3 font-mono text-sm uppercase focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
                   placeholder="CHS-XXXXXX"
                   value={inviteCode}
                   onChange={(e) => setInviteCode(e.target.value)}
                 />
-              </label>
+              </div>
             ) : null}
             <button
               type="submit"
-              className="w-full rounded-xl bg-teal-700 py-3 text-sm font-medium text-white"
+              className="w-full rounded-xl bg-gradient-to-r from-teal-600 to-teal-700 py-3 text-sm font-semibold text-white shadow-md transition hover:from-teal-700 hover:to-teal-800"
             >
-              Verify & open home
+              Verify & Login
             </button>
             <button
               type="button"
-              className="w-full text-sm text-slate-500 underline"
+              className="w-full text-sm text-teal-600 hover:text-teal-700"
               onClick={() => {
                 setStep("phone");
                 setError("");
               }}
             >
-              Change number
+              ← Change number
             </button>
           </form>
         )}
 
         {error ? (
-          <p className="mt-3 text-sm text-rose-600">{error}</p>
+          <div className="mt-4 rounded-lg bg-rose-50 px-4 py-3 text-sm text-rose-700">
+            {error}
+          </div>
         ) : null}
+
+        <div className="mt-4 flex items-center justify-between text-sm">
+          <button
+            type="button"
+            className="text-teal-600 hover:text-teal-700"
+            onClick={() => setError("Contact committee for password reset")}
+          >
+            Forgot Password?
+          </button>
+          <button
+            type="button"
+            className="text-teal-600 hover:text-teal-700"
+            onClick={() => setError("Contact committee to register")}
+          >
+            Register
+          </button>
+        </div>
       </div>
 
-      <div className="rounded-2xl bg-white p-4 shadow-sm">
-        <p className="mb-2 text-sm font-semibold text-slate-900">
-          Quick pick (Green Park demo)
+      {/* Quick Pick Demo */}
+      <div className="mt-6 w-full rounded-2xl bg-white/80 p-4 shadow-sm backdrop-blur">
+        <p className="mb-3 text-sm font-semibold text-slate-900">
+          Quick Pick (Demo Residents)
         </p>
         <ul className="space-y-2">
           {greenResidents.map((r) => (
             <li key={r.id}>
               <button
                 type="button"
-                className="flex w-full items-center justify-between rounded-xl bg-slate-50 px-3 py-2 text-left text-sm hover:bg-teal-50"
+                className="flex w-full items-center justify-between rounded-xl bg-slate-50 px-4 py-2.5 text-left text-sm transition hover:bg-teal-50 hover:border-teal-200 border border-transparent"
                 onClick={() => {
                   setPhone(r.phone);
                   setStep("phone");
@@ -179,18 +207,20 @@ export default function ResidentLoginPage() {
                   setInviteCode("");
                 }}
               >
-                <span>
-                  <strong>{r.name}</strong>
-                  <span className="text-slate-500"> · {r.flatNumber}</span>
-                </span>
+                <div className="flex items-center gap-3">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-teal-100 text-teal-700 font-semibold text-xs">
+                    {r.name.charAt(0)}
+                  </div>
+                  <div>
+                    <p className="font-medium text-slate-900">{r.name}</p>
+                    <p className="text-xs text-slate-500">{r.flatNumber}</p>
+                  </div>
+                </div>
                 <span className="font-mono text-xs text-teal-800">{r.phone}</span>
               </button>
             </li>
           ))}
         </ul>
-        <p className="mt-3 text-xs text-slate-500">
-          Hero overdue: Neha Kapoor · B-101 · 9000002101
-        </p>
       </div>
     </div>
   );

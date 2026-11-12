@@ -1,123 +1,213 @@
 "use client";
 
+import { useState } from "react";
+import Link from "next/link";
 import { formatINR, useDemoState } from "@/lib/demo/hooks";
 
 export default function ResidentBillPage() {
+  const [tab, setTab] = useState<"current" | "previous">("current");
   const state = useDemoState();
   const resident = state.residents.find(
     (r) => r.id === state.session?.residentId,
   );
   if (!resident) return <div className="p-5 text-sm">No resident session.</div>;
 
-  const society = state.societies.find((s) => s.id === resident.societyId);
   const flat = state.flats.find((f) => f.id === resident.flatId);
-  const building = state.buildings.find((b) => b.id === flat?.buildingId);
   const bills = state.bills
     .filter((b) => b.flatId === resident.flatId && b.status !== "draft")
     .sort((a, b) => b.month.localeCompare(a.month));
-  const current = bills[0];
+
+  // Current bill = bills that are NOT paid (have status other than "paid")
+  const current = bills.find((b) => b.status !== "paid");
+
+  // Previous bills = bills that ARE paid
+  const previous = bills.filter((b) => b.status === "paid");
+
   const balance = current
     ? Math.max(0, current.totalAmount - current.paidAmount)
     : 0;
 
+  // Debug: Log to console to help diagnose
+  if (typeof window !== "undefined") {
+    console.log("Bill Page Debug:", {
+      totalBills: bills.length,
+      currentBill: current ? { month: current.month, status: current.status, balance: current.totalAmount - current.paidAmount } : null,
+      previousCount: previous.length,
+    });
+  }
+
   return (
     <div className="space-y-4 p-5">
-      <div className="overflow-hidden rounded-2xl bg-white shadow-sm">
-        <div className="border-b-2 border-dashed border-slate-200 bg-slate-900 px-4 py-4 text-white">
-          <p className="text-[10px] uppercase tracking-[0.2em] text-teal-200">
-            Digital maintenance bill
-          </p>
-          <h2 className="mt-1 text-lg font-semibold">{society?.name}</h2>
-          <p className="text-xs text-slate-300">
-            {society?.address}, {society?.city}
-          </p>
-        </div>
-        {current ? (
-          <div className="space-y-3 p-4 text-sm">
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <div>
-                <p className="text-slate-500">Flat / Wing</p>
-                <p className="font-medium">
-                  {flat?.number} · {building?.name}
-                </p>
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold text-slate-900">Billing</h2>
+        <button
+          type="button"
+          onClick={() => window.location.reload()}
+          className="text-xs text-teal-600 hover:text-teal-700"
+        >
+          Refresh
+        </button>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex gap-2 border-b border-slate-200">
+        <button
+          type="button"
+          onClick={() => setTab("current")}
+          className={`pb-2 text-sm font-medium ${
+            tab === "current"
+              ? "border-b-2 border-teal-600 text-teal-700"
+              : "text-slate-500"
+          }`}
+        >
+          Current Bill
+        </button>
+        <button
+          type="button"
+          onClick={() => setTab("previous")}
+          className={`pb-2 text-sm font-medium ${
+            tab === "previous"
+              ? "border-b-2 border-teal-600 text-teal-700"
+              : "text-slate-500"
+          }`}
+        >
+          Previous Bills
+        </button>
+      </div>
+
+      {tab === "current" && current ? (
+        <div className="space-y-4">
+          {/* Flat Info */}
+          <div className="rounded-xl bg-slate-50 px-4 py-3 text-sm">
+            <p className="font-medium text-slate-900">
+              Flat No. {flat?.number}
+            </p>
+            <p className="text-xs text-slate-500">{current.month}</p>
+          </div>
+
+          {/* Charges Breakdown */}
+          <div className="rounded-2xl bg-white p-4 shadow-sm">
+            <h3 className="mb-3 text-sm font-semibold text-slate-900">
+              Maintenance Charges
+            </h3>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-slate-600">Base Maintenance</span>
+                <span className="font-medium text-slate-900">
+                  {formatINR(current.maintenanceAmount)}
+                </span>
               </div>
-              <div>
-                <p className="text-slate-500">Bill month</p>
-                <p className="font-medium">{current.month}</p>
+              <div className="flex justify-between">
+                <span className="text-slate-600">Parking Charges</span>
+                <span className="font-medium text-slate-900">{formatINR(0)}</span>
               </div>
-              <div>
-                <p className="text-slate-500">Generated</p>
-                <p className="font-medium">
-                  {current.publishedAt
-                    ? new Date(current.publishedAt).toLocaleDateString("en-IN")
-                    : "—"}
-                </p>
+              <div className="flex justify-between">
+                <span className="text-slate-600">Sinking Fund</span>
+                <span className="font-medium text-slate-900">{formatINR(0)}</span>
               </div>
-              <div>
-                <p className="text-slate-500">Resident</p>
-                <p className="font-medium">{resident.name}</p>
+              <div className="flex justify-between border-t border-slate-200 pt-2 font-semibold">
+                <span className="text-slate-900">Total</span>
+                <span className="text-slate-900">
+                  {formatINR(current.maintenanceAmount)}
+                </span>
               </div>
             </div>
-
-            <dl className="space-y-2 border-t border-slate-100 pt-3">
-              <div className="flex justify-between">
-                <dt>Current maintenance</dt>
-                <dd>{formatINR(current.maintenanceAmount)}</dd>
-              </div>
-              <div className="flex justify-between text-amber-800">
-                <dt>Previous overdue</dt>
-                <dd>{formatINR(current.previousDue)}</dd>
-              </div>
-              <div className="flex justify-between text-rose-700">
-                <dt>Late penalty</dt>
-                <dd>{formatINR(current.penalty)}</dd>
-              </div>
-              <div className="flex justify-between border-t border-slate-100 pt-2 text-base font-semibold">
-                <dt>Total payable</dt>
-                <dd>{formatINR(current.totalAmount)}</dd>
-              </div>
-              <div className="flex justify-between text-teal-700">
-                <dt>Already paid</dt>
-                <dd>{formatINR(current.paidAmount)}</dd>
-              </div>
-              <div className="flex justify-between rounded-xl bg-rose-50 px-3 py-2 font-semibold text-rose-800">
-                <dt>Balance due</dt>
-                <dd>{formatINR(balance)}</dd>
-              </div>
-            </dl>
-
-            <button
-              type="button"
-              className="w-full rounded-xl border border-slate-200 py-2 text-xs font-medium no-print"
-              onClick={() => window.print()}
-            >
-              Print / save bill
-            </button>
           </div>
-        ) : (
-          <p className="p-4 text-sm text-slate-500">No published bill.</p>
-        )}
-      </div>
 
-      <div className="rounded-2xl bg-white p-4 shadow-sm">
-        <p className="mb-2 text-sm font-semibold">Month-wise history</p>
-        <ul className="space-y-2 text-sm">
-          {bills.map((b) => (
-            <li
-              key={b.id}
-              className="flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2"
+          {/* Previous Outstanding */}
+          {current.previousDue > 0 && (
+            <div className="rounded-2xl bg-amber-50 p-4 shadow-sm">
+              <h3 className="mb-2 text-sm font-semibold text-amber-900">
+                Previous Outstanding
+              </h3>
+              <p className="text-sm text-amber-800">
+                {current.previousDue > 0
+                  ? `Oct 2025 ${formatINR(current.previousDue)}`
+                  : "None"}
+              </p>
+            </div>
+          )}
+
+          {/* Total Payable */}
+          <div className="rounded-2xl bg-gradient-to-br from-teal-600 to-teal-700 p-4 text-white shadow-lg">
+            <h3 className="text-sm font-medium text-teal-100">Total Payable</h3>
+            <p className="mt-2 text-3xl font-bold">{formatINR(current.totalAmount)}</p>
+            <p className="mt-1 text-xs text-teal-100">
+              Balance due: {formatINR(balance)}
+            </p>
+          </div>
+
+          {/* Proceed to Pay */}
+          <Link
+            href="/app/pay"
+            className="block w-full rounded-xl bg-gradient-to-r from-teal-600 to-teal-700 py-3 text-center text-sm font-semibold text-white shadow-md transition hover:from-teal-700 hover:to-teal-800"
+          >
+            Proceed to Pay
+          </Link>
+        </div>
+      ) : tab === "current" ? (
+        <div className="rounded-2xl bg-white p-8 text-center shadow-sm">
+          <div className="flex flex-col items-center gap-3">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
+              <svg className="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-base font-semibold text-slate-900">All Bills Paid!</p>
+              <p className="mt-1 text-sm text-slate-500">You have no outstanding dues.</p>
+            </div>
+            <Link
+              href="/app/history"
+              className="mt-2 rounded-xl bg-teal-600 px-4 py-2 text-sm font-medium text-white"
             >
-              <span>
-                {b.month}{" "}
-                <span className="capitalize text-slate-500">· {b.status}</span>
-              </span>
-              <span className="font-medium">
-                {formatINR(Math.max(0, b.totalAmount - b.paidAmount))}
-              </span>
-            </li>
-          ))}
-        </ul>
-      </div>
+              View Payment History
+            </Link>
+          </div>
+        </div>
+      ) : null}
+
+      {tab === "previous" && previous.length > 0 ? (
+        <div className="space-y-3">
+          {previous.map((bill) => {
+            const billBalance = Math.max(0, bill.totalAmount - bill.paidAmount);
+            const isFullyPaid = billBalance === 0;
+            return (
+              <div
+                key={bill.id}
+                className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium text-slate-900">{bill.month}</p>
+                    <p className="text-xs text-slate-500 capitalize">{bill.status}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-semibold text-slate-900">
+                      {formatINR(bill.totalAmount)}
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      Paid: {formatINR(bill.paidAmount)}
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-3 pt-3 border-t border-slate-100">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-slate-600">Balance:</span>
+                    <span className={`font-semibold ${isFullyPaid ? 'text-green-600' : 'text-rose-600'}`}>
+                      {formatINR(billBalance)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : tab === "previous" ? (
+        <div className="rounded-2xl bg-white p-8 text-center shadow-sm">
+          <p className="text-sm text-slate-500">No previous bills available.</p>
+        </div>
+      ) : null}
     </div>
   );
 }

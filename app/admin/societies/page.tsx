@@ -6,7 +6,6 @@ import {
   FlashBar,
   GhostBtn,
   PageCard,
-  RowActions,
 } from "@/components/demo/Shell";
 import { useDemoState, useFlash } from "@/lib/demo/hooks";
 import {
@@ -44,16 +43,27 @@ export default function SocietiesPage() {
   const [editStatus, setEditStatus] = useState<Society["status"]>("active");
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <FlashBar flash={flash} />
 
-      <PageCard title="Create society">
+      {/* Header */}
+      <div>
+        <h2 className="text-2xl font-semibold text-slate-900">
+          Manage Societies
+        </h2>
+        <p className="text-sm text-slate-600">
+          {state.societies.length} societies · Create new CHS accounts
+        </p>
+      </div>
+
+      {/* Create Society Form */}
+      <PageCard title="Create New Society">
         <p className="mb-4 text-sm text-slate-600">
-          Super Admin creates the CHS account + Building <strong>Main</strong> +
-          invites Chairman. Wings/flats/money stay in society console.
+          Creates the CHS account + Building <strong>Main</strong> + invites Chairman.
+          Wings/flats/money stay in society console.
         </p>
         <form
-          className="grid gap-3 sm:grid-cols-2"
+          className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
           onSubmit={(e) => {
             e.preventDefault();
             try {
@@ -81,110 +91,134 @@ export default function SocietiesPage() {
             }
           }}
         >
-          <label className="text-sm">
-            Society name
+          <div className="sm:col-span-2">
+            <label className="mb-1 block text-xs font-medium text-slate-700">
+              Society Name
+            </label>
             <input
               required
-              className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2"
+              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+              placeholder="e.g., Green Park CHS"
               value={name}
               onChange={(e) => {
                 setName(e.target.value);
                 if (!slug) setSlug(slugify(e.target.value));
               }}
             />
-          </label>
-          <label className="text-sm">
-            Slug
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-slate-700">
+              Slug (URL)
+            </label>
             <input
               required
-              className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2"
+              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+              placeholder="green-park"
               value={slug}
               onChange={(e) => setSlug(slugify(e.target.value))}
             />
-          </label>
-          <label className="text-sm sm:col-span-2">
-            Address
+          </div>
+          <div className="sm:col-span-2">
+            <label className="mb-1 block text-xs font-medium text-slate-700">
+              Address
+            </label>
             <input
               required
-              className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2"
+              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+              placeholder="Full address"
               value={address}
               onChange={(e) => setAddress(e.target.value)}
             />
-          </label>
-          <label className="text-sm">
-            City
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-slate-700">
+              City
+            </label>
             <input
               required
-              className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2"
+              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+              placeholder="Mumbai"
               value={city}
               onChange={(e) => setCity(e.target.value)}
             />
-          </label>
-          <label className="text-sm">
-            Plan
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-slate-700">
+              Plan
+            </label>
             <select
-              className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2"
+              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
               value={plan}
               onChange={(e) => setPlan(e.target.value as "basic" | "pro")}
             >
               <option value="basic">Basic</option>
               <option value="pro">Pro</option>
             </select>
-          </label>
-          <label className="text-sm">
-            Chairman name
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-slate-700">
+              Chairman Name
+            </label>
             <input
               required
-              className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2"
+              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+              placeholder="Full name"
               value={chairmanName}
               onChange={(e) => setChairmanName(e.target.value)}
             />
-          </label>
-          <label className="text-sm">
-            Chairman phone
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-slate-700">
+              Chairman Phone
+            </label>
             <input
               required
-              className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2"
+              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+              placeholder="Mobile number"
               value={chairmanPhone}
               onChange={(e) => setChairmanPhone(e.target.value)}
             />
-          </label>
-          <label className="text-sm sm:col-span-2">
-            Chairman email
+          </div>
+          <div className="sm:col-span-2">
+            <label className="mb-1 block text-xs font-medium text-slate-700">
+              Chairman Email
+            </label>
             <input
               required
               type="email"
-              className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2"
+              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+              placeholder="Email address"
               value={chairmanEmail}
               onChange={(e) => setChairmanEmail(e.target.value)}
             />
-          </label>
-          <div className="sm:col-span-2">
+          </div>
+          <div className="sm:col-span-2 lg:col-span-3 flex items-end gap-2">
             <button
               type="submit"
-              className="rounded-lg bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800"
+              className="flex-1 rounded-lg bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800"
             >
-              Create society
+              + Create Society
             </button>
-            {createdSlug ? (
-              <p className="mt-2 text-sm text-teal-800">
-                Created.{" "}
-                <Link className="underline" href={`/society/${createdSlug}`}>
-                  Open society console
-                </Link>
-              </p>
-            ) : null}
+            {createdSlug && (
+              <Link
+                href={`/society/${createdSlug}`}
+                className="rounded-lg border border-teal-200 bg-teal-50 px-4 py-2 text-sm font-medium text-teal-700 hover:bg-teal-100"
+              >
+                Open Console →
+              </Link>
+            )}
           </div>
         </form>
       </PageCard>
 
-      <PageCard title="All societies">
-        <ul className="divide-y divide-slate-100">
+      {/* Societies List */}
+      <PageCard title="All Societies">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {state.societies.map((s) =>
             editId === s.id ? (
-              <li key={s.id} className="py-3">
+              <div key={s.id} className="rounded-xl border border-teal-200 bg-teal-50 p-4">
                 <form
-                  className="grid gap-2 sm:grid-cols-2"
+                  className="space-y-3"
                   onSubmit={(e) => {
                     e.preventDefault();
                     updateSociety(s.id, {
@@ -198,67 +232,115 @@ export default function SocietiesPage() {
                     ok(`Updated ${editName}`);
                   }}
                 >
-                  <input
-                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                    value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
-                    required
-                  />
-                  <input
-                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                    value={editCity}
-                    onChange={(e) => setEditCity(e.target.value)}
-                    required
-                  />
-                  <input
-                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm sm:col-span-2"
-                    value={editAddress}
-                    onChange={(e) => setEditAddress(e.target.value)}
-                    required
-                  />
-                  <select
-                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                    value={editPlan}
-                    onChange={(e) =>
-                      setEditPlan(e.target.value as Society["plan"])
-                    }
-                  >
-                    <option value="basic">Basic</option>
-                    <option value="pro">Pro</option>
-                  </select>
-                  <select
-                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                    value={editStatus}
-                    onChange={(e) =>
-                      setEditStatus(e.target.value as Society["status"])
-                    }
-                  >
-                    <option value="active">Active</option>
-                    <option value="paused">Paused</option>
-                  </select>
-                  <div className="flex gap-2 sm:col-span-2">
-                    <GhostBtn type="submit">Save</GhostBtn>
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-slate-700">
+                      Name
+                    </label>
+                    <input
+                      className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-slate-700">
+                      City
+                    </label>
+                    <input
+                      className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                      value={editCity}
+                      onChange={(e) => setEditCity(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-slate-700">
+                      Address
+                    </label>
+                    <input
+                      className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                      value={editAddress}
+                      onChange={(e) => setEditAddress(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-slate-700">
+                        Plan
+                      </label>
+                      <select
+                        className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                        value={editPlan}
+                        onChange={(e) =>
+                          setEditPlan(e.target.value as Society["plan"])
+                        }
+                      >
+                        <option value="basic">Basic</option>
+                        <option value="pro">Pro</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-slate-700">
+                        Status
+                      </label>
+                      <select
+                        className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                        value={editStatus}
+                        onChange={(e) =>
+                          setEditStatus(e.target.value as Society["status"])
+                        }
+                      >
+                        <option value="active">Active</option>
+                        <option value="paused">Paused</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <GhostBtn type="submit" className="flex-1">Save</GhostBtn>
                     <GhostBtn onClick={() => setEditId(null)}>Cancel</GhostBtn>
                   </div>
                 </form>
-              </li>
+              </div>
             ) : (
-              <li
+              <div
                 key={s.id}
-                className="flex flex-wrap items-center justify-between gap-2 py-3"
+                className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-teal-600 hover:shadow-md"
               >
-                <div>
-                  <p className="font-medium">{s.name}</p>
-                  <p className="text-sm text-slate-500">
-                    /{s.slug} · {s.city} · {s.status} · {s.plan}
-                  </p>
+                <div className="mb-3 flex items-start justify-between gap-2">
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-slate-900">{s.name}</h3>
+                    <p className="text-sm text-slate-500">/{s.slug} · {s.city}</p>
+                  </div>
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                      s.status === "active"
+                        ? "bg-green-100 text-green-800"
+                        : "bg-slate-100 text-slate-700"
+                    }`}
+                  >
+                    {s.status}
+                  </span>
                 </div>
-                <RowActions>
+                <div className="mb-3 flex items-center justify-between">
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                      s.plan === "pro"
+                        ? "bg-purple-100 text-purple-800"
+                        : "bg-slate-100 text-slate-700"
+                    }`}
+                  >
+                    {s.plan}
+                  </span>
+                  <p className="text-xs text-slate-500">{s.address}</p>
+                </div>
+                <div className="flex gap-2">
                   <Link
                     href={`/society/${s.slug}`}
-                    className="rounded-md px-2 py-1 text-xs font-medium text-teal-800 hover:bg-teal-50"
+                    className="flex-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-center text-sm font-medium text-slate-700 hover:bg-slate-100 cursor-pointer"
                   >
-                    Open
+                    Open Console
                   </Link>
                   <GhostBtn
                     onClick={() => {
@@ -281,11 +363,11 @@ export default function SocietiesPage() {
                   >
                     Delete
                   </GhostBtn>
-                </RowActions>
-              </li>
+                </div>
+              </div>
             ),
           )}
-        </ul>
+        </div>
       </PageCard>
     </div>
   );

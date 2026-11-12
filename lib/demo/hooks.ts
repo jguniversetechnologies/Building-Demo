@@ -65,3 +65,6 @@ export function formatINR(amount: number) {
     maximumFractionDigits: 0,
   }).format(amount);
 }
+
+/** Re-export getFlatRate for use in components */
+export { getFlatRate } from "./store";

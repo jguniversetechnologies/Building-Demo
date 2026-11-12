@@ -50,6 +50,7 @@ export interface Flat {
   buildingId: string;
   number: string;
   flatTypeId: string;
+  customRate?: number | null;
 }
 
 export interface StaffUser {

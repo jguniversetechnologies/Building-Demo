@@ -4,8 +4,6 @@ import { useMemo, useState } from "react";
 import {
   FlashBar,
   GhostBtn,
-  PageCard,
-  RowActions,
 } from "@/components/demo/Shell";
 import { useDemoState, useFlash, useHasPermission } from "@/lib/demo/hooks";
 import { useRouter } from "next/navigation";
@@ -37,6 +35,7 @@ export default function ResidentsPage() {
     phone: string;
     name: string;
   } | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const [editId, setEditId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
@@ -53,60 +52,130 @@ export default function ResidentsPage() {
   const residents = useMemo(() => {
     if (!society) return [];
     const flatIds = new Set(flats.map((f) => f.id));
-    return state.residents.filter(
+    let list = state.residents.filter(
       (r) => r.societyId === society.id && flatIds.has(r.flatId),
     );
-  }, [society, state.residents, flats]);
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      list = list.filter(
+        (r) =>
+          r.name.toLowerCase().includes(term) ||
+          r.phone.includes(term) ||
+          flats.find((f) => f.id === r.flatId)?.number.toLowerCase().includes(term)
+      );
+    }
+    return list;
+  }, [society, state.residents, flats, searchTerm]);
 
   if (!society) return null;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <FlashBar flash={flash} />
 
+      {/* Header with stats */}
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-semibold text-slate-900">
+            Residents
+          </h2>
+          <p className="text-sm text-slate-600">
+            {residents.length} registered · {flats.length} flats
+          </p>
+        </div>
+        {canEdit && (
+          <button
+            type="button"
+            className="rounded-lg bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800"
+            onClick={() => {
+              const inviteSection = document.getElementById("invite-section");
+              inviteSection?.scrollIntoView({ behavior: "smooth" });
+            }}
+          >
+            + Invite Resident
+          </button>
+        )}
+      </div>
+
       {scope?.length ? (
-        <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-          Scoped view: only buildings assigned to this staff user (LAM).
-        </p>
+        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          <span className="font-medium">Scoped view:</span> Only buildings assigned to this staff user (LAM).
+        </div>
       ) : null}
 
-      <PageCard title="Residents">
-        <ul className="mb-4 divide-y divide-slate-100">
-          {residents.map((r) => {
-            const flat = state.flats.find((f) => f.id === r.flatId);
-            const building = state.buildings.find(
-              (b) => b.id === flat?.buildingId,
-            );
-            if (editId === r.id) {
-              return (
-                <li key={r.id} className="py-3">
-                  <form
-                    className="flex flex-wrap gap-2"
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      updateResident(r.id, {
-                        name: editName,
-                        phone: editPhone,
-                        flatId: editFlatId,
-                      });
-                      setEditId(null);
-                      ok(`Updated ${editName}`);
-                    }}
-                  >
+      {/* Search */}
+      <div className="relative">
+        <input
+          type="text"
+          placeholder="Search by name, phone, or flat number..."
+          className="w-full rounded-lg border border-slate-200 px-4 py-3 pl-10 text-sm"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+        <svg
+          className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+          />
+        </svg>
+      </div>
+
+      {/* Residents Grid */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {residents.map((r) => {
+          const flat = state.flats.find((f) => f.id === r.flatId);
+          const building = state.buildings.find((b) => b.id === flat?.buildingId);
+          if (editId === r.id) {
+            return (
+              <div key={r.id} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                <form
+                  className="space-y-3"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    updateResident(r.id, {
+                      name: editName,
+                      phone: editPhone,
+                      flatId: editFlatId,
+                    });
+                    setEditId(null);
+                    ok(`Updated ${editName}`);
+                  }}
+                >
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-slate-700">
+                      Name
+                    </label>
                     <input
-                      className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                      className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
                       value={editName}
                       onChange={(e) => setEditName(e.target.value)}
                       required
                     />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-slate-700">
+                      Phone
+                    </label>
                     <input
-                      className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                      className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
                       value={editPhone}
                       onChange={(e) => setEditPhone(e.target.value)}
                       required
                     />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-slate-700">
+                      Flat
+                    </label>
                     <select
-                      className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                      className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
                       value={editFlatId}
                       onChange={(e) => setEditFlatId(e.target.value)}
                     >
@@ -116,72 +185,89 @@ export default function ResidentsPage() {
                         </option>
                       ))}
                     </select>
-                    <GhostBtn type="submit">Save</GhostBtn>
+                  </div>
+                  <div className="flex gap-2">
+                    <GhostBtn type="submit" className="flex-1">
+                      Save
+                    </GhostBtn>
                     <GhostBtn onClick={() => setEditId(null)}>Cancel</GhostBtn>
-                  </form>
-                </li>
-              );
-            }
-            return (
-              <li
-                key={r.id}
-                className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm"
-              >
-                <span>
-                  <strong>{r.name}</strong> · {flat?.number} · {building?.name}
-                  <span className="ml-2 font-mono text-slate-600">
-                    {r.phone}
-                  </span>
-                  {r.inviteCode ? (
-                    <span className="ml-2 rounded bg-amber-100 px-1.5 py-0.5 text-[11px] text-amber-900">
-                      code {r.inviteCode}
-                    </span>
-                  ) : null}
-                </span>
-                <RowActions>
-                  <GhostBtn
-                    onClick={() => {
-                      startResidentSession(r.id);
-                      router.push("/app");
-                    }}
-                  >
-                    Open app
-                  </GhostBtn>
-                  {canEdit ? (
-                    <>
-                      <GhostBtn
-                        onClick={() => {
-                          setEditId(r.id);
-                          setEditName(r.name);
-                          setEditPhone(r.phone);
-                          setEditFlatId(r.flatId);
-                        }}
-                      >
-                        Edit
-                      </GhostBtn>
-                      <GhostBtn
-                        danger
-                        onClick={() => {
-                          deleteResident(r.id);
-                          ok(`Removed ${r.name}`);
-                        }}
-                      >
-                        Delete
-                      </GhostBtn>
-                    </>
-                  ) : null}
-                </RowActions>
-              </li>
+                  </div>
+                </form>
+              </div>
             );
-          })}
-          {residents.length === 0 ? (
-            <li className="py-2 text-sm text-slate-500">No residents yet.</li>
-          ) : null}
-        </ul>
+          }
 
-        {canEdit ? (
+          return (
+            <div
+              key={r.id}
+              className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-teal-600 cursor-pointer hover:shadow-md"
+            >
+              <div className="mb-3 flex items-start justify-between">
+                <div className="flex-1">
+                  <h3 className="font-semibold text-slate-900">{r.name}</h3>
+                  <p className="text-sm text-slate-500">{flat?.number} · {building?.name}</p>
+                  <p className="mt-1 font-mono text-sm text-slate-600">{r.phone}</p>
+                </div>
+                {r.inviteCode ? (
+                  <span className="rounded-full bg-amber-100 px-2 py-1 text-xs font-medium text-amber-800">
+                    New
+                  </span>
+                ) : null}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <GhostBtn
+                  onClick={() => {
+                    startResidentSession(r.id);
+                    router.push("/app");
+                  }}
+                >
+                  Open App
+                </GhostBtn>
+                {canEdit ? (
+                  <>
+                    <GhostBtn
+                      onClick={() => {
+                        setEditId(r.id);
+                        setEditName(r.name);
+                        setEditPhone(r.phone);
+                        setEditFlatId(r.flatId);
+                      }}
+                    >
+                      Edit
+                    </GhostBtn>
+                    <GhostBtn
+                      danger
+                      onClick={() => {
+                        deleteResident(r.id);
+                        ok(`Removed ${r.name}`);
+                      }}
+                    >
+                      Delete
+                    </GhostBtn>
+                  </>
+                ) : null}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {residents.length === 0 && (
+        <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
+          <p className="text-sm text-slate-500">
+            {searchTerm ? "No residents match your search." : "No residents yet. Invite your first resident."}
+          </p>
+        </div>
+      )}
+
+      {/* Invite Form */}
+      {canEdit && (
+        <div id="invite-section" className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h3 className="mb-4 text-lg font-semibold text-slate-900">
+            Invite New Resident
+          </h3>
           <form
-            className="flex flex-wrap gap-2"
+            className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
             onSubmit={(e) => {
               e.preventDefault();
               if (!flats.length) {
@@ -208,64 +294,101 @@ export default function ResidentsPage() {
               }
             }}
           >
-            <input
-              required
-              className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-              placeholder="Name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-            <input
-              required
-              className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-              placeholder="10-digit phone"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-            />
-            <select
-              className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-              value={flatId || flats[0]?.id || ""}
-              onChange={(e) => setFlatId(e.target.value)}
-            >
-              {flats.map((f) => (
-                <option key={f.id} value={f.id}>
-                  {f.number}
-                </option>
-              ))}
-            </select>
-            <button
-              type="submit"
-              className="rounded-lg bg-teal-700 px-3 py-2 text-sm text-white"
-            >
-              Invite resident
-            </button>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-slate-700">
+                Name
+              </label>
+              <input
+                required
+                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                placeholder="Full name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-slate-700">
+                Phone
+              </label>
+              <input
+                required
+                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                placeholder="10-digit mobile"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-slate-700">
+                Assign Flat
+              </label>
+              <select
+                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                value={flatId || flats[0]?.id || ""}
+                onChange={(e) => setFlatId(e.target.value)}
+              >
+                {flats.map((f) => (
+                  <option key={f.id} value={f.id}>
+                    {f.number}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex items-end">
+              <button
+                type="submit"
+                className="w-full rounded-lg bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800"
+              >
+                Send Invite
+              </button>
+            </div>
           </form>
-        ) : null}
 
-        {lastInvite ? (
-          <div className="mt-3 space-y-2 rounded-xl bg-teal-50 px-3 py-3 text-sm text-teal-900">
-            <p>
-              Invited <strong>{lastInvite.name}</strong>. Phone{" "}
-              <strong className="font-mono">{lastInvite.phone}</strong> · invite
-              code <strong className="font-mono">{lastInvite.code}</strong>
-            </p>
-            <p className="text-xs text-teal-800">
-              Demo: open Resident app → login with that phone → OTP{" "}
-              <strong>1234</strong> → enter invite code once.
-            </p>
-            <button
-              type="button"
-              className="rounded-lg bg-teal-800 px-3 py-1.5 text-xs font-medium text-white"
-              onClick={() => {
-                clearSession();
-                router.push("/app/login");
-              }}
-            >
-              Open resident phone login
-            </button>
-          </div>
-        ) : null}
-      </PageCard>
+          {lastInvite ? (
+            <div className="mt-4 rounded-xl bg-teal-50 p-4">
+              <div className="flex items-start gap-3">
+                <div className="rounded-full bg-teal-100 p-2">
+                  <svg
+                    className="h-5 w-5 text-teal-700"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-teal-900">
+                    Invite sent to {lastInvite.name}
+                  </p>
+                  <p className="mt-1 text-sm text-teal-800">
+                    Phone: <span className="font-mono">{lastInvite.phone}</span> · Code:{" "}
+                    <span className="font-mono">{lastInvite.code}</span>
+                  </p>
+                  <p className="mt-2 text-xs text-teal-700">
+                    Share this code with the resident. They&apos;ll enter it when logging in.
+                  </p>
+                  <button
+                    type="button"
+                    className="mt-3 rounded-lg bg-teal-800 px-3 py-1.5 text-xs font-medium text-white hover:bg-teal-900"
+                    onClick={() => {
+                      clearSession();
+                      router.push("/app/login");
+                    }}
+                  >
+                    Open Resident App Login
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : null}
+        </div>
+      )}
     </div>
   );
 }

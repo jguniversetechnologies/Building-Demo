@@ -54,18 +54,27 @@ export default function PaymentsPage() {
     : 0;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <FlashBar flash={flash} />
 
+      {/* Header */}
+      <div>
+        <h2 className="text-2xl font-semibold text-slate-900">
+          Payments
+        </h2>
+        <p className="text-sm text-slate-600">
+          {payments.length} total · {formatINR(payments.reduce((s, p) => s + p.amount, 0))} collected
+        </p>
+      </div>
+
       {canRecord ? (
-        <PageCard title="Record office payment">
-          <p className="mb-3 text-sm text-slate-600">
-            Cash / cheque / bank — same ledger as resident UPI. Partial amounts
-            allowed.
+        <PageCard title="Record Office Payment">
+          <p className="mb-4 text-sm text-slate-600">
+            Cash / cheque / bank — same ledger as resident UPI. Partial amounts allowed.
           </p>
           {selected ? (
             <form
-              className="flex flex-wrap items-end gap-2"
+              className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5"
               onSubmit={(e) => {
                 e.preventDefault();
                 const bill = selected;
@@ -88,10 +97,12 @@ export default function PaymentsPage() {
                 }
               }}
             >
-              <label className="text-sm">
-                Open bill
+              <div className="sm:col-span-2">
+                <label className="mb-1 block text-xs font-medium text-slate-700">
+                  Select Bill
+                </label>
                 <select
-                  className="mt-1 block min-w-[220px] rounded-lg border border-slate-200 px-3 py-2"
+                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
                   value={selected.id}
                   onChange={(e) => {
                     setBillId(e.target.value);
@@ -108,23 +119,27 @@ export default function PaymentsPage() {
                     );
                   })}
                 </select>
-              </label>
-              <label className="text-sm">
-                Amount (₹)
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-slate-700">
+                  Amount (₹)
+                </label>
                 <input
                   type="number"
                   min={1}
                   max={due}
-                  className="mt-1 block w-28 rounded-lg border border-slate-200 px-3 py-2"
+                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
                   placeholder={String(due)}
                   value={amount || ""}
                   onChange={(e) => setAmount(Number(e.target.value))}
                 />
-              </label>
-              <label className="text-sm">
-                Method
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-slate-700">
+                  Method
+                </label>
                 <select
-                  className="mt-1 block rounded-lg border border-slate-200 px-3 py-2"
+                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
                   value={method}
                   onChange={(e) =>
                     setMethod(e.target.value as Payment["method"])
@@ -135,63 +150,79 @@ export default function PaymentsPage() {
                   <option value="bank">Bank</option>
                   <option value="cheque">Cheque</option>
                 </select>
-              </label>
-              <label className="text-sm">
-                Note
+              </div>
+              <div className="flex items-end">
+                <button
+                  type="submit"
+                  className="w-full rounded-lg bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800"
+                >
+                  Record Payment
+                </button>
+              </div>
+              <div className="sm:col-span-4 lg:col-span-5">
+                <label className="mb-1 block text-xs font-medium text-slate-700">
+                  Note (optional)
+                </label>
                 <input
-                  className="mt-1 block w-40 rounded-lg border border-slate-200 px-3 py-2"
+                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                  placeholder="Reference number or description"
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
                 />
-              </label>
-              <button
-                type="submit"
-                className="rounded-lg bg-teal-700 px-4 py-2 text-sm text-white"
-              >
-                Save payment
-              </button>
+              </div>
             </form>
           ) : (
-            <p className="text-sm text-slate-500">No open dues to record.</p>
+            <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
+              <p className="text-sm text-slate-500">No open dues to record payment against.</p>
+            </div>
           )}
         </PageCard>
       ) : null}
 
-      <PageCard title="Payment ledger">
-        <p className="mb-3 text-sm text-slate-600">
+      <PageCard title="Payment Ledger">
+        <p className="mb-4 text-sm text-slate-600">
           Resident UPI and office entries share this list — updates instantly.
         </p>
         {payments.length === 0 ? (
-          <p className="text-sm text-slate-500">No payments yet.</p>
+          <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
+            <p className="text-sm text-slate-500">No payments recorded yet.</p>
+          </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full text-left text-sm">
               <thead>
-                <tr className="border-b border-slate-200 text-slate-500">
-                  <th className="py-2 pr-3">When</th>
-                  <th className="py-2 pr-3">Flat</th>
-                  <th className="py-2 pr-3">Amount</th>
-                  <th className="py-2 pr-3">Method</th>
-                  <th className="py-2 pr-3">Note</th>
-                  {canRecord ? <th className="py-2">Actions</th> : null}
+                <tr className="border-b border-slate-200 bg-slate-50 text-slate-500">
+                  <th className="px-3 py-3 font-medium">Date & Time</th>
+                  <th className="px-3 py-3 font-medium">Flat</th>
+                  <th className="px-3 py-3 font-medium">Amount</th>
+                  <th className="px-3 py-3 font-medium">Method</th>
+                  <th className="px-3 py-3 font-medium">Note</th>
+                  {canRecord ? <th className="px-3 py-3 font-medium">Actions</th> : null}
                 </tr>
               </thead>
               <tbody>
                 {payments.map((p) => {
                   const flat = state.flats.find((f) => f.id === p.flatId);
                   return (
-                    <tr key={p.id} className="border-b border-slate-100">
-                      <td className="py-2 pr-3">
-                        {new Date(p.createdAt).toLocaleString("en-IN")}
+                    <tr key={p.id} className="border-b border-slate-100 hover:bg-slate-50 cursor-pointer">
+                      <td className="px-3 py-3">
+                        {new Date(p.createdAt).toLocaleString("en-IN", {
+                          dateStyle: "medium",
+                          timeStyle: "short",
+                        })}
                       </td>
-                      <td className="py-2 pr-3">{flat?.number}</td>
-                      <td className="py-2 pr-3 font-medium">
+                      <td className="px-3 py-3 font-medium">{flat?.number}</td>
+                      <td className="px-3 py-3 font-semibold text-teal-700">
                         {formatINR(p.amount)}
                       </td>
-                      <td className="py-2 pr-3 uppercase">{p.method}</td>
-                      <td className="py-2 pr-3">{p.note || "—"}</td>
+                      <td className="px-3 py-3">
+                        <span className="inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium capitalize">
+                          {p.method}
+                        </span>
+                      </td>
+                      <td className="px-3 py-3 text-slate-600">{p.note || "—"}</td>
                       {canRecord ? (
-                        <td className="py-2">
+                        <td className="px-3 py-3">
                           <RowActions>
                             <GhostBtn
                               danger

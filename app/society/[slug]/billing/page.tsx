@@ -20,6 +20,7 @@ import {
   deleteMonthBills,
   generateBillsForMonth,
   publishBills,
+  regenerateBillsForMonth,
   updateBillingConfig,
 } from "@/lib/demo/store";
 import { useSocietySlug } from "@/lib/demo/useSocietySlug";
@@ -96,6 +97,12 @@ export default function BillingPage() {
           <strong>Nov 2025</strong>. Don’t jump to 2026 unless you mean to.
         </p>
       </PageCard>
+
+      <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+        <strong>Custom rates:</strong> If you change a flat&apos;s custom rate, click
+        &quot;Regenerate with new rates&quot; to update existing bills. New bills
+        automatically use the current rate.
+      </div>
 
       <PageCard title="Rates (used when creating bills)">
         <div className="flex flex-wrap gap-4 text-sm">
@@ -245,6 +252,21 @@ export default function BillingPage() {
             </button>
             <button
               type="button"
+              className="rounded-lg border border-amber-200 px-3 py-2 text-sm text-amber-700"
+              disabled={live === 0}
+              onClick={() => {
+                const res = regenerateBillsForMonth(society.id, month);
+                if (res.changed === 0) {
+                  ok(`All bills already use current rates (${res.updated} checked)`);
+                } else {
+                  ok(`Updated ${res.changed} bills with new rates (${res.updated} total)`);
+                }
+              }}
+            >
+              Regenerate with new rates
+            </button>
+            <button
+              type="button"
               className="rounded-lg border border-rose-200 px-3 py-2 text-sm text-rose-700"
               onClick={() => {
                 const res = deleteMonthBills(society.id, month);
@@ -289,11 +311,16 @@ export default function BillingPage() {
                 {monthBills.map((b) => {
                   const flat = state.flats.find((f) => f.id === b.flatId);
                   const st = statusLabel(b.status, b.previousDue);
+                  const type = types.find((t) => t.id === flat?.flatTypeId);
+                  const typeRate = type?.monthlyRate ?? 0;
                   return (
                     <tr key={b.id} className="border-b border-slate-100">
                       <td className="py-2 pr-3 font-medium">{flat?.number}</td>
                       <td className="py-2 pr-3">
                         {formatINR(b.maintenanceAmount)}
+                        {flat?.customRate && flat.customRate !== typeRate ? (
+                          <span className="ml-1 text-xs text-amber-600">(custom)</span>
+                        ) : null}
                       </td>
                       <td className="py-2 pr-3">
                         {formatINR(b.previousDue)}

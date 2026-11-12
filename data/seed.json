@@ -49,7 +49,7 @@
     { "id": "flt_ga202", "societyId": "soc_green", "buildingId": "bld_green_a", "number": "A-202", "flatTypeId": "ft_green_3bhk" },
     { "id": "flt_ga301", "societyId": "soc_green", "buildingId": "bld_green_a", "number": "A-301", "flatTypeId": "ft_green_2bhk" },
     { "id": "flt_ga_shop", "societyId": "soc_green", "buildingId": "bld_green_a", "number": "A-G1", "flatTypeId": "ft_green_shop" },
-    { "id": "flt_gb101", "societyId": "soc_green", "buildingId": "bld_green_b", "number": "B-101", "flatTypeId": "ft_green_2bhk" },
+    { "id": "flt_gb101", "societyId": "soc_green", "buildingId": "bld_green_b", "number": "B-101", "flatTypeId": "ft_green_2bhk", "customRate": 4500 },
     { "id": "flt_gb102", "societyId": "soc_green", "buildingId": "bld_green_b", "number": "B-102", "flatTypeId": "ft_green_2bhk" },
     { "id": "flt_gb201", "societyId": "soc_green", "buildingId": "bld_green_b", "number": "B-201", "flatTypeId": "ft_green_3bhk" },
     { "id": "flt_gb202", "societyId": "soc_green", "buildingId": "bld_green_b", "number": "B-202", "flatTypeId": "ft_green_3bhk" },
