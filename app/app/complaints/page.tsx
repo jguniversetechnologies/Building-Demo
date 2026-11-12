@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useDemoState } from "@/lib/demo/hooks";
+import { addComplaint } from "@/lib/demo/store";
 
 export default function ComplaintsPage() {
   const [tab, setTab] = useState<"complaint" | "maintenance">("complaint");
@@ -8,6 +10,10 @@ export default function ComplaintsPage() {
   const [description, setDescription] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
+  const state = useDemoState();
+  const resident = state.residents.find(
+    (r) => r.id === state.session?.residentId,
+  );
 
   const handleSubmit = () => {
     setError("");
@@ -19,7 +25,21 @@ export default function ComplaintsPage() {
       setError("Please describe your issue");
       return;
     }
-    // Simulate submission
+    if (!resident) {
+      setError("Please login first");
+      return;
+    }
+
+    // Save complaint to store
+    addComplaint({
+      residentId: resident.id,
+      flatId: resident.flatId,
+      societyId: resident.societyId,
+      type: tab,
+      category,
+      description,
+    });
+
     setSubmitted(true);
     // Reset form after delay
     setTimeout(() => {

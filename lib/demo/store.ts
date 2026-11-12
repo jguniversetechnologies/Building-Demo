@@ -3,6 +3,7 @@ import type {
   Bill,
   BillingConfig,
   Building,
+  Complaint,
   DemoSession,
   DemoState,
   Expense,
@@ -561,6 +562,26 @@ export function addExpense(input: {
   state.expenses.unshift(expense);
   writeState(state);
   return expense;
+}
+
+export function addComplaint(input: {
+  residentId: string;
+  flatId: string;
+  societyId: string;
+  type: "complaint" | "maintenance";
+  category: string;
+  description: string;
+}) {
+  const state = readState();
+  const complaint: Complaint = {
+    id: uid("cmp"),
+    ...input,
+    status: "pending",
+    createdAt: nowIso(),
+  };
+  state.complaints.unshift(complaint);
+  writeState(state);
+  return complaint;
 }
 
 export function addNotice(input: {

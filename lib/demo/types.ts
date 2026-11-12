@@ -125,6 +125,18 @@ export interface Notice {
   createdAt: string;
 }
 
+export interface Complaint {
+  id: string;
+  residentId: string;
+  flatId: string;
+  societyId: string;
+  type: "complaint" | "maintenance";
+  category: string;
+  description: string;
+  status: "pending" | "in_progress" | "resolved";
+  createdAt: string;
+}
+
 export interface DemoSession {
   role: SessionRole;
   societyId: string | null;
@@ -146,6 +158,7 @@ export interface DemoState {
   payments: Payment[];
   expenses: Expense[];
   notices: Notice[];
+  complaints: Complaint[];
   session: DemoSession | null;
 }
 
@@ -189,4 +202,4 @@ export const ROLE_PERMISSIONS: Record<
 };
 
 export const DEMO_STORAGE_KEY = "building-demo-v4";
-export const DEMO_STATE_VERSION = 4;
+export const DEMO_STATE_VERSION = 5;

@@ -15,6 +15,13 @@ export default function MorePage() {
           <span className="text-slate-400">→</span>
         </Link>
         <Link
+          href="/app/complaints/history"
+          className="flex items-center justify-between rounded-xl bg-white px-4 py-3 shadow-sm"
+        >
+          <span className="text-sm font-medium text-slate-900">My Complaints</span>
+          <span className="text-slate-400">→</span>
+        </Link>
+        <Link
           href="/app/profile"
           className="flex items-center justify-between rounded-xl bg-white px-4 py-3 shadow-sm"
         >

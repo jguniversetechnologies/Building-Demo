@@ -1,5 +1,5 @@
 {
-  "version": 4,
+  "version": 5,
   "societies": [
     {
       "id": "soc_shanti",
@@ -190,5 +190,6 @@
     { "id": "ntc_2", "societyId": "soc_green", "title": "AGM on 15 Nov", "body": "Annual general meeting in Wing A lobby at 11 AM.", "createdAt": "2025-10-18T08:00:00.000Z" },
     { "id": "ntc_3", "societyId": "soc_green", "title": "Maintenance due by 7th", "body": "Please clear October dues. Late fee ₹300 after due date.", "createdAt": "2025-10-01T08:00:00.000Z" }
   ],
+  "complaints": [],
   "session": null
 }
