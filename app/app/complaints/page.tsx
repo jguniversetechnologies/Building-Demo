@@ -6,6 +6,56 @@ export default function ComplaintsPage() {
   const [tab, setTab] = useState<"complaint" | "maintenance">("complaint");
   const [category, setCategory] = useState("");
   const [description, setDescription] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSubmit = () => {
+    setError("");
+    if (!category) {
+      setError("Please select a category");
+      return;
+    }
+    if (!description.trim()) {
+      setError("Please describe your issue");
+      return;
+    }
+    // Simulate submission
+    setSubmitted(true);
+    // Reset form after delay
+    setTimeout(() => {
+      setCategory("");
+      setDescription("");
+      setSubmitted(false);
+    }, 3000);
+  };
+
+  if (submitted) {
+    return (
+      <div className="flex min-h-full flex-col items-center justify-center px-5 py-8">
+        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-green-100">
+          <svg
+            className="h-10 w-10 text-green-600"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M5 13l4 4L19 7"
+            />
+          </svg>
+        </div>
+        <h2 className="mt-4 text-xl font-semibold text-slate-900">
+          Complaint Submitted!
+        </h2>
+        <p className="mt-2 text-sm text-slate-500">
+          Your {tab} has been registered. We will review it shortly.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4 p-5">
@@ -84,9 +134,16 @@ export default function ComplaintsPage() {
           </button>
         </div>
 
+        {error && (
+          <div className="rounded-xl bg-rose-50 px-4 py-3 text-sm text-rose-700">
+            {error}
+          </div>
+        )}
+
         <button
           type="button"
-          className="w-full rounded-xl bg-gradient-to-r from-teal-600 to-teal-700 py-3 text-sm font-semibold text-white shadow-md transition hover:from-teal-700 hover:to-teal-800"
+          onClick={handleSubmit}
+          className="w-full rounded-xl bg-gradient-to-r from-teal-600 to-teal-700 py-3 text-sm font-semibold text-white shadow-md transition hover:from-teal-700 hover:to-teal-800 cursor-pointer"
         >
           Submit
         </button>
