@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
 import { PageCard } from "@/components/demo/Shell";
 import { formatINR, useDemoState } from "@/lib/demo/hooks";
 import { useSocietySlug } from "@/lib/demo/useSocietySlug";
@@ -18,37 +19,51 @@ export default function SocietyDashboardPage() {
   const slug = useSocietySlug();
   const state = useDemoState();
   const society = state.societies.find((s) => s.slug === slug);
+  const sid = society?.id ?? "";
+  const [month, setMonth] = useState("");
+
+  const months = useMemo(() => {
+    if (!sid) return [];
+    return [
+      ...new Set([
+        ...state.bills.filter((b) => b.societyId === sid).map((b) => b.month),
+        ...state.expenses.filter((e) => e.societyId === sid).map((e) => e.month),
+      ]),
+    ].sort();
+  }, [sid, state.bills, state.expenses]);
+
+  const latest = months.at(-1) ?? "2025-10";
+  const selectedMonth = month || latest;
+  const chips = useMemo(() => {
+    const set = new Set(months);
+    if (selectedMonth) set.add(selectedMonth);
+    return [...set].sort();
+  }, [months, selectedMonth]);
+
+  useEffect(() => {
+    setMonth("");
+  }, [slug]);
+
   if (!society) return null;
 
-  const sid = society.id;
-  const months = [
-    ...new Set([
-      ...state.bills.filter((b) => b.societyId === sid).map((b) => b.month),
-      ...state.expenses.filter((e) => e.societyId === sid).map((e) => e.month),
-      ...state.payments
-        .filter((p) => p.societyId === sid)
-        .map((p) => p.createdAt.slice(0, 7)),
-    ]),
-  ].sort();
-  const month = months.at(-1) ?? "2025-10";
-
-  // Calculate metrics
-  const totalBilled = state.bills
-    .filter((b) => b.societyId === sid && b.month === month && b.status !== "draft")
-    .reduce((s, b) => s + b.totalAmount, 0);
-  const collected = state.payments
-    .filter((p) => p.societyId === sid && p.createdAt.startsWith(month))
-    .reduce((s, p) => s + p.amount, 0);
-  const overdue = state.bills
-    .filter(
-      (b) =>
-        b.societyId === sid &&
-        b.status !== "draft" &&
-        b.totalAmount - b.paidAmount > 0,
-    )
-    .reduce((s, b) => s + (b.totalAmount - b.paidAmount), 0);
+  const monthBills = state.bills.filter(
+    (b) =>
+      b.societyId === sid &&
+      b.month === selectedMonth &&
+      b.status !== "draft",
+  );
+  const monthBillIds = new Set(monthBills.map((b) => b.id));
+  const totalBilled = monthBills.reduce((s, b) => s + b.totalAmount, 0);
+  const collected = monthBills.reduce((s, b) => s + b.paidAmount, 0);
+  const overdue = monthBills.reduce(
+    (s, b) => s + Math.max(0, b.totalAmount - b.paidAmount),
+    0,
+  );
+  const unpaidFlats = monthBills.filter(
+    (b) => b.totalAmount - b.paidAmount > 0,
+  ).length;
   const expenses = state.expenses
-    .filter((e) => e.societyId === sid && e.month === month)
+    .filter((e) => e.societyId === sid && e.month === selectedMonth)
     .reduce((s, e) => s + e.amount, 0);
   const flats = state.flats.filter((f) => f.societyId === sid).length;
   const residents = state.residents.filter((r) => r.societyId === sid).length;
@@ -56,21 +71,22 @@ export default function SocietyDashboardPage() {
   const net = collected - expenses;
   const trackMax = Math.max(collected + expenses, 1);
 
-  // Payment method breakdown
   const paymentMethods = state.payments
-    .filter((p) => p.societyId === sid && p.createdAt.startsWith(month))
-    .reduce((acc, p) => {
-      acc[p.method] = (acc[p.method] || 0) + p.amount;
-      return acc;
-    }, {} as Record<string, number>);
+    .filter((p) => p.societyId === sid && monthBillIds.has(p.billId))
+    .reduce(
+      (acc, p) => {
+        acc[p.method] = (acc[p.method] || 0) + p.amount;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
 
-  // Recent payments
   const recentPayments = state.payments
-    .filter((p) => p.societyId === sid)
+    .filter((p) => p.societyId === sid && monthBillIds.has(p.billId))
     .slice(0, 5);
 
-  // Collection rate
-  const collectionRate = totalBilled > 0 ? Math.round((collected / totalBilled) * 100) : 0;
+  const collectionRate =
+    totalBilled > 0 ? Math.round((collected / totalBilled) * 100) : 0;
 
   return (
     <div className="space-y-6">
@@ -84,12 +100,15 @@ export default function SocietyDashboardPage() {
             {society.city} · {flats} flats · {residents} residents
           </p>
         </div>
-        <div className="flex gap-2">
-          {months.slice(-3).map((m) => (
+        <div className="flex flex-wrap items-center gap-2">
+          {chips.map((m) => (
             <button
               key={m}
-              className={`rounded-lg px-3 py-1.5 text-sm ${
-                month === m
+              type="button"
+              aria-pressed={selectedMonth === m}
+              onClick={() => setMonth(m)}
+              className={`cursor-pointer rounded-lg px-3 py-1.5 text-sm ${
+                selectedMonth === m
                   ? "bg-teal-700 text-white"
                   : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
               }`}
@@ -97,6 +116,17 @@ export default function SocietyDashboardPage() {
               {monthLabel(m)}
             </button>
           ))}
+          <label className="flex items-center gap-2 text-sm text-slate-600">
+            Other
+            <input
+              type="month"
+              className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm"
+              value={selectedMonth}
+              onChange={(e) => {
+                if (e.target.value) setMonth(e.target.value);
+              }}
+            />
+          </label>
         </div>
       </div>
 
@@ -111,7 +141,7 @@ export default function SocietyDashboardPage() {
               <p className="mt-1 text-2xl font-semibold text-slate-900">
                 {formatINR(totalBilled)}
               </p>
-              <p className="mt-1 text-xs text-slate-500">{monthLabel(month)}</p>
+              <p className="mt-1 text-xs text-slate-500">{monthLabel(selectedMonth)}</p>
             </div>
             <div className="rounded-full bg-slate-100 p-3">
               <svg
@@ -172,10 +202,7 @@ export default function SocietyDashboardPage() {
                 {formatINR(overdue)}
               </p>
               <p className="mt-1 text-xs text-slate-500">
-                {state.bills.filter(
-                  (b) => b.societyId === sid && b.status === "overdue"
-                ).length}{" "}
-                overdue flats
+                {unpaidFlats} unpaid flat{unpaidFlats === 1 ? "" : "s"} this month
               </p>
             </div>
             <div className="rounded-full bg-rose-50 p-3">
@@ -205,7 +232,7 @@ export default function SocietyDashboardPage() {
               <p className="mt-1 text-2xl font-semibold text-amber-700">
                 {formatINR(expenses)}
               </p>
-              <p className="mt-1 text-xs text-slate-500">{monthLabel(month)}</p>
+              <p className="mt-1 text-xs text-slate-500">{monthLabel(selectedMonth)}</p>
             </div>
             <div className="rounded-full bg-amber-50 p-3">
               <svg
@@ -227,7 +254,7 @@ export default function SocietyDashboardPage() {
       </div>
 
       {/* Collection Rate Card */}
-      <PageCard title="Collection Performance">
+      <PageCard title={`Collection Performance · ${monthLabel(selectedMonth)}`}>
         <div className="grid gap-6 sm:grid-cols-2">
           <div>
             <div className="mb-3 flex items-center justify-between">
@@ -252,7 +279,7 @@ export default function SocietyDashboardPage() {
 
           <div>
             <p className="mb-3 text-sm font-medium text-slate-700">
-              Payment Methods ({monthLabel(month)})
+              Payment Methods ({monthLabel(selectedMonth)})
             </p>
             <div className="space-y-2">
               {Object.entries(paymentMethods).map(([method, amount]) => (
@@ -273,7 +300,7 @@ export default function SocietyDashboardPage() {
 
       {/* Financial Health & Quick Actions */}
       <div className="grid gap-4 lg:grid-cols-2">
-        <PageCard title="Financial Health">
+        <PageCard title={`Financial Health · ${monthLabel(selectedMonth)}`}>
           <div className="space-y-4">
             <div>
               <div className="mb-2 flex justify-between text-sm">
@@ -430,9 +457,11 @@ export default function SocietyDashboardPage() {
 
       {/* Recent Activity & Notices */}
       <div className="grid gap-4 lg:grid-cols-2">
-        <PageCard title="Recent Payments">
+        <PageCard title={`Recent Payments · ${monthLabel(selectedMonth)}`}>
           {recentPayments.length === 0 ? (
-            <p className="text-sm text-slate-500">No payments recorded yet.</p>
+            <p className="text-sm text-slate-500">
+              No payments for {monthLabel(selectedMonth)}.
+            </p>
           ) : (
             <ul className="space-y-3">
               {recentPayments.map((p) => {
