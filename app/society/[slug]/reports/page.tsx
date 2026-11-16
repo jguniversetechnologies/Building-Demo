@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { PageCard } from "@/components/demo/Shell";
+import { MonthYearPicker } from "@/components/demo/MonthYearPicker";
 import { formatINR, useDemoState } from "@/lib/demo/hooks";
 import { useSocietySlug } from "@/lib/demo/useSocietySlug";
 
@@ -183,21 +184,13 @@ export default function ReportsPage() {
                   ),
                 )}
               </div>
-              <div>
-                <label className="mb-1 block text-xs font-medium text-slate-700">
-                  Other month
-                </label>
-                <input
-                  type="month"
-                  className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm"
-                  value={selectedMonth}
-                  onChange={(e) => {
-                    if (!e.target.value) return;
-                    setMonth(e.target.value);
-                    setYear(e.target.value.slice(0, 4));
-                  }}
-                />
-              </div>
+              <MonthYearPicker
+                value={selectedMonth}
+                onChange={(ym) => {
+                  setMonth(ym);
+                  setYear(ym.slice(0, 4));
+                }}
+              />
             </>
           ) : null}
         </div>

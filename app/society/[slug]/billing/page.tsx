@@ -8,6 +8,7 @@ import {
   PageCard,
   RowActions,
 } from "@/components/demo/Shell";
+import { MonthYearPicker } from "@/components/demo/MonthYearPicker";
 import {
   formatINR,
   useDemoState,
@@ -161,15 +162,9 @@ export default function BillingPage() {
                 {monthLabel(m)}
               </button>
             ))}
-            <label className="flex items-center gap-2 text-sm text-slate-600">
-              Other
-              <input
-                type="month"
-                className="rounded-lg border border-slate-200 px-2 py-1"
-                value={month}
-                onChange={(e) => setMonth(e.target.value)}
-              />
-            </label>
+            <div className="min-w-[220px]">
+              <MonthYearPicker value={month} onChange={setMonth} />
+            </div>
           </div>
 
           <div className="mb-4 grid gap-2 sm:grid-cols-3">

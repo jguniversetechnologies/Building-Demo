@@ -7,6 +7,7 @@ import {
   PageCard,
   RowActions,
 } from "@/components/demo/Shell";
+import { MonthYearPicker } from "@/components/demo/MonthYearPicker";
 import {
   formatINR,
   useDemoState,
@@ -62,17 +63,7 @@ export default function ExpensesPage() {
       {/* Month Tracker Card */}
       <PageCard title="Month Financial Tracker">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div>
-            <label className="mb-1 block text-xs font-medium text-slate-700">
-              Select Month
-            </label>
-            <input
-              type="month"
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
-              value={month}
-              onChange={(e) => setMonth(e.target.value)}
-            />
-          </div>
+          <MonthYearPicker value={month} onChange={setMonth} />
           <div className="rounded-xl bg-teal-50 p-4">
             <p className="text-xs text-teal-600">Collected</p>
             <p className="mt-1 text-xl font-semibold text-teal-700">
@@ -113,17 +104,7 @@ export default function ExpensesPage() {
               setAmount(0);
             }}
           >
-            <div>
-              <label className="mb-1 block text-xs font-medium text-slate-700">
-                Month
-              </label>
-              <input
-                type="month"
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                value={month}
-                onChange={(e) => setMonth(e.target.value)}
-              />
-            </div>
+            <MonthYearPicker value={month} onChange={setMonth} />
             <div className="sm:col-span-2">
               <label className="mb-1 block text-xs font-medium text-slate-700">
                 Title
@@ -196,7 +177,7 @@ export default function ExpensesPage() {
                     <tr key={e.id} className="bg-slate-50">
                       <td colSpan={5} className="p-3">
                         <form
-                          className="grid gap-2 sm:grid-cols-5"
+                          className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5"
                           onSubmit={(ev) => {
                             ev.preventDefault();
                             updateExpense(e.id, {
@@ -209,11 +190,10 @@ export default function ExpensesPage() {
                             ok(`Updated ${editTitle}`);
                           }}
                         >
-                          <input
-                            type="month"
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                          <MonthYearPicker
+                            className="sm:col-span-2 lg:col-span-1"
                             value={editMonth}
-                            onChange={(ev) => setEditMonth(ev.target.value)}
+                            onChange={setEditMonth}
                           />
                           <input
                             className="rounded-lg border border-slate-200 px-3 py-2 text-sm"

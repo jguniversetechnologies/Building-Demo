@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { PageCard } from "@/components/demo/Shell";
+import { MonthYearPicker } from "@/components/demo/MonthYearPicker";
 import { formatINR, useDemoState } from "@/lib/demo/hooks";
 import { useSocietySlug } from "@/lib/demo/useSocietySlug";
 
@@ -116,17 +117,9 @@ export default function SocietyDashboardPage() {
               {monthLabel(m)}
             </button>
           ))}
-          <label className="flex items-center gap-2 text-sm text-slate-600">
-            Other
-            <input
-              type="month"
-              className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm"
-              value={selectedMonth}
-              onChange={(e) => {
-                if (e.target.value) setMonth(e.target.value);
-              }}
-            />
-          </label>
+          <div className="min-w-[220px]">
+            <MonthYearPicker value={selectedMonth} onChange={setMonth} />
+          </div>
         </div>
       </div>
 
