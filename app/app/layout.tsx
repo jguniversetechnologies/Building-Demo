@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { Suspense, useEffect } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { clearSession, resetDemoData } from "@/lib/demo/store";
 import { useDemoState } from "@/lib/demo/hooks";
 
@@ -19,20 +19,21 @@ function tabActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export default function ResidentAppLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+function ResidentAppLayoutInner({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const state = useDemoState();
   const session = state.session;
   const isLogin = pathname === "/app/login";
   const isResident = session?.role === "resident";
   const resident = state.residents.find((r) => r.id === session?.residentId);
   const flat = state.flats.find((f) => f.id === resident?.flatId);
-  const society = state.societies.find((s) => s.id === resident?.societyId);
+  const loginSocietySlug = searchParams.get("society");
+  const society =
+    state.societies.find((s) => s.id === resident?.societyId) ??
+    state.societies.find((s) => s.slug === loginSocietySlug) ??
+    null;
 
   useEffect(() => {
     if (isLogin) return;
@@ -93,9 +94,15 @@ export default function ResidentAppLayout({
             </>
           ) : (
             <>
-              <p className="text-xs text-teal-100">Building Demo</p>
+              <p className="text-xs text-teal-100">
+                {society?.name ?? "Building Demo"}
+              </p>
               <h1 className="text-xl font-semibold">Resident app</h1>
-              <p className="text-sm text-teal-100">Login with your mobile</p>
+              <p className="text-sm text-teal-100">
+                {society
+                  ? `Login for ${society.name}`
+                  : "Login with your mobile"}
+              </p>
             </>
           )}
         </div>
@@ -128,5 +135,23 @@ export default function ResidentAppLayout({
         ) : null}
       </div>
     </div>
+  );
+}
+
+export default function ResidentAppLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex flex-1 items-center justify-center p-8 text-sm text-slate-500">
+          Loading resident app…
+        </div>
+      }
+    >
+      <ResidentAppLayoutInner>{children}</ResidentAppLayoutInner>
+    </Suspense>
   );
 }

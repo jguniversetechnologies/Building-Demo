@@ -31,7 +31,6 @@ export default function ResidentsPage() {
   const [phone, setPhone] = useState("");
   const [flatId, setFlatId] = useState("");
   const [lastInvite, setLastInvite] = useState<{
-    code: string;
     phone: string;
     name: string;
   } | null>(null);
@@ -208,11 +207,6 @@ export default function ResidentsPage() {
                   <p className="text-sm text-slate-500">{flat?.number} · {building?.name}</p>
                   <p className="mt-1 font-mono text-sm text-slate-600">{r.phone}</p>
                 </div>
-                {r.inviteCode ? (
-                  <span className="rounded-full bg-amber-100 px-2 py-1 text-xs font-medium text-amber-800">
-                    New
-                  </span>
-                ) : null}
               </div>
               <div className="flex flex-wrap gap-2">
                 <GhostBtn
@@ -282,11 +276,10 @@ export default function ResidentsPage() {
                   phone,
                 });
                 setLastInvite({
-                  code: result.inviteCode,
                   phone: result.resident.phone,
                   name: result.resident.name,
                 });
-                ok(`Invited ${name} · ${result.resident.phone}`);
+                ok(`Added ${name} · ${result.resident.phone}`);
                 setName("");
                 setPhone("");
               } catch (e) {
@@ -364,21 +357,21 @@ export default function ResidentsPage() {
                 </div>
                 <div className="flex-1">
                   <p className="text-sm font-medium text-teal-900">
-                    Invite sent to {lastInvite.name}
+                    Added {lastInvite.name}
                   </p>
                   <p className="mt-1 text-sm text-teal-800">
-                    Phone: <span className="font-mono">{lastInvite.phone}</span> · Code:{" "}
-                    <span className="font-mono">{lastInvite.code}</span>
-                  </p>
-                  <p className="mt-2 text-xs text-teal-700">
-                    Share this code with the resident. They&apos;ll enter it when logging in.
+                    Phone:{" "}
+                    <span className="font-mono">{lastInvite.phone}</span> — they
+                    can log in with phone + OTP only.
                   </p>
                   <button
                     type="button"
                     className="mt-3 rounded-lg bg-teal-800 px-3 py-1.5 text-xs font-medium text-white hover:bg-teal-900"
                     onClick={() => {
                       clearSession();
-                      router.push("/app/login");
+                      router.push(
+                        `/app/login?society=${encodeURIComponent(slug)}&phone=${encodeURIComponent(lastInvite.phone)}`,
+                      );
                     }}
                   >
                     Open Resident App Login

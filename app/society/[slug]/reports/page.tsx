@@ -1,51 +1,208 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
 import { PageCard } from "@/components/demo/Shell";
 import { formatINR, useDemoState } from "@/lib/demo/hooks";
 import { useSocietySlug } from "@/lib/demo/useSocietySlug";
+
+function monthLabel(ym: string) {
+  if (!/^\d{4}-\d{2}$/.test(ym)) return ym;
+  const [y, m] = ym.split("-").map(Number);
+  return new Date(y, m - 1, 1).toLocaleString("en-IN", {
+    month: "short",
+    year: "numeric",
+  });
+}
+
+type PeriodMode = "all" | "year" | "month";
 
 export default function ReportsPage() {
   const slug = useSocietySlug();
   const state = useDemoState();
   const society = state.societies.find((s) => s.slug === slug);
+  const sid = society?.id ?? "";
+
+  const [mode, setMode] = useState<PeriodMode>("month");
+  const [year, setYear] = useState("");
+  const [month, setMonth] = useState("");
+
+  const months = useMemo(() => {
+    if (!sid) return [];
+    return [
+      ...new Set([
+        ...state.bills.filter((b) => b.societyId === sid).map((b) => b.month),
+        ...state.expenses.filter((e) => e.societyId === sid).map((e) => e.month),
+      ]),
+    ].sort();
+  }, [sid, state.bills, state.expenses]);
+
+  const years = useMemo(
+    () => [...new Set(months.map((m) => m.slice(0, 4)))].sort(),
+    [months],
+  );
+
+  const latestMonth = months.at(-1) ?? "2025-10";
+  const latestYear = years.at(-1) ?? latestMonth.slice(0, 4);
+  const selectedYear = year || latestYear;
+  const selectedMonth = month || latestMonth;
+
+  useEffect(() => {
+    setMode("month");
+    setYear("");
+    setMonth("");
+  }, [slug]);
+
   if (!society) return null;
 
-  const sid = society.id;
-  const collected = state.payments
-    .filter((p) => p.societyId === sid)
-    .reduce((s, p) => s + p.amount, 0);
-  const billed = state.bills
-    .filter((b) => b.societyId === sid && b.status !== "draft")
-    .reduce((s, b) => s + b.totalAmount, 0);
-  const outstanding = state.bills
-    .filter((b) => b.societyId === sid && b.status !== "draft")
-    .reduce((s, b) => s + Math.max(0, b.totalAmount - b.paidAmount), 0);
+  const periodBills = state.bills.filter((b) => {
+    if (b.societyId !== sid || b.status === "draft") return false;
+    if (mode === "all") return true;
+    if (mode === "year") return b.month.startsWith(selectedYear);
+    return b.month === selectedMonth;
+  });
+  const billed = periodBills.reduce((s, b) => s + b.totalAmount, 0);
+  const collected = periodBills.reduce((s, b) => s + b.paidAmount, 0);
+  const outstanding = periodBills.reduce(
+    (s, b) => s + Math.max(0, b.totalAmount - b.paidAmount),
+    0,
+  );
   const expenses = state.expenses
-    .filter((e) => e.societyId === sid)
+    .filter((e) => {
+      if (e.societyId !== sid) return false;
+      if (mode === "all") return true;
+      if (mode === "year") return e.month.startsWith(selectedYear);
+      return e.month === selectedMonth;
+    })
     .reduce((s, e) => s + e.amount, 0);
+
+  const periodLabel =
+    mode === "all"
+      ? "All time"
+      : mode === "year"
+        ? selectedYear
+        : monthLabel(selectedMonth);
+
+  const monthsInYear = months.filter((m) => m.startsWith(selectedYear));
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-semibold text-slate-900">
-            Reports
-          </h2>
+          <h2 className="text-2xl font-semibold text-slate-900">Reports</h2>
           <p className="text-sm text-slate-600">
-            Financial overview and printable reports
+            Financial overview and printable reports · {periodLabel}
           </p>
         </div>
         <button
           type="button"
-          className="no-print rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium hover:bg-slate-50"
+          className="no-print cursor-pointer rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium hover:bg-slate-50"
           onClick={() => window.print()}
         >
           🖨️ Print Report
         </button>
       </div>
 
-      {/* Stats Cards */}
+      <PageCard title="Filter by period">
+        <div className="flex flex-wrap items-end gap-3">
+          <div>
+            <label className="mb-1 block text-xs font-medium text-slate-700">
+              View
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {(
+                [
+                  ["all", "All time"],
+                  ["year", "By year"],
+                  ["month", "By month"],
+                ] as const
+              ).map(([value, label]) => (
+                <button
+                  key={value}
+                  type="button"
+                  aria-pressed={mode === value}
+                  onClick={() => setMode(value)}
+                  className={`cursor-pointer rounded-lg px-3 py-1.5 text-sm ${
+                    mode === value
+                      ? "bg-teal-700 text-white"
+                      : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {mode !== "all" ? (
+            <div>
+              <label className="mb-1 block text-xs font-medium text-slate-700">
+                Year
+              </label>
+              <select
+                className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm"
+                value={selectedYear}
+                onChange={(e) => {
+                  setYear(e.target.value);
+                  const firstInYear = months.find((m) =>
+                    m.startsWith(e.target.value),
+                  );
+                  if (firstInYear) setMonth(firstInYear);
+                }}
+              >
+                {years.length === 0 ? (
+                  <option value={selectedYear}>{selectedYear}</option>
+                ) : (
+                  years.map((y) => (
+                    <option key={y} value={y}>
+                      {y}
+                    </option>
+                  ))
+                )}
+              </select>
+            </div>
+          ) : null}
+
+          {mode === "month" ? (
+            <>
+              <div className="flex flex-wrap gap-2">
+                {(monthsInYear.length ? monthsInYear : [selectedMonth]).map(
+                  (m) => (
+                    <button
+                      key={m}
+                      type="button"
+                      aria-pressed={selectedMonth === m}
+                      onClick={() => setMonth(m)}
+                      className={`cursor-pointer rounded-lg px-3 py-1.5 text-sm ${
+                        selectedMonth === m
+                          ? "bg-teal-700 text-white"
+                          : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                      }`}
+                    >
+                      {monthLabel(m)}
+                    </button>
+                  ),
+                )}
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-slate-700">
+                  Other month
+                </label>
+                <input
+                  type="month"
+                  className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm"
+                  value={selectedMonth}
+                  onChange={(e) => {
+                    if (!e.target.value) return;
+                    setMonth(e.target.value);
+                    setYear(e.target.value.slice(0, 4));
+                  }}
+                />
+              </div>
+            </>
+          ) : null}
+        </div>
+      </PageCard>
+
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="flex items-center justify-between">
@@ -56,7 +213,7 @@ export default function ReportsPage() {
               <p className="mt-1 text-2xl font-semibold text-slate-900">
                 {formatINR(billed)}
               </p>
-              <p className="mt-1 text-xs text-slate-500">All time</p>
+              <p className="mt-1 text-xs text-slate-500">{periodLabel}</p>
             </div>
             <div className="rounded-full bg-blue-50 p-3">
               <svg
@@ -85,7 +242,7 @@ export default function ReportsPage() {
               <p className="mt-1 text-2xl font-semibold text-teal-700">
                 {formatINR(collected)}
               </p>
-              <p className="mt-1 text-xs text-slate-500">All time</p>
+              <p className="mt-1 text-xs text-slate-500">{periodLabel}</p>
             </div>
             <div className="rounded-full bg-teal-50 p-3">
               <svg
@@ -143,7 +300,7 @@ export default function ReportsPage() {
               <p className="mt-1 text-2xl font-semibold text-amber-700">
                 {formatINR(expenses)}
               </p>
-              <p className="mt-1 text-xs text-slate-500">All time</p>
+              <p className="mt-1 text-xs text-slate-500">{periodLabel}</p>
             </div>
             <div className="rounded-full bg-amber-50 p-3">
               <svg
@@ -164,8 +321,7 @@ export default function ReportsPage() {
         </div>
       </div>
 
-      {/* Financial Summary */}
-      <PageCard title="Financial Summary">
+      <PageCard title={`Financial Summary · ${periodLabel}`}>
         <div className="rounded-xl bg-slate-50 p-6">
           <div className="mb-4 flex items-center justify-between">
             <span className="text-sm font-medium text-slate-700">
@@ -195,14 +351,20 @@ export default function ReportsPage() {
             <div className="text-center">
               <p className="text-xs text-slate-500">Total Bills</p>
               <p className="mt-1 text-lg font-semibold text-slate-900">
-                {state.bills.filter((b) => b.societyId === sid && b.status !== "draft").length}
+                {periodBills.length}
               </p>
             </div>
           </div>
+          {mode !== "all" && periodBills.length === 0 && expenses === 0 ? (
+            <p className="mt-4 text-sm text-slate-500">
+              No bills or expenses for {periodLabel}.
+            </p>
+          ) : null}
         </div>
         <p className="mt-4 text-sm text-slate-500">
-          💡 Tip: Use browser print (Ctrl+P / Cmd+P) to generate PDF reports. The demo
-          uses the browser&apos;s default print stylesheet for clean output.
+          Tip: Use browser print (Ctrl+P / Cmd+P) to generate PDF reports. The
+          demo uses the browser&apos;s default print stylesheet for clean
+          output.
         </p>
       </PageCard>
     </div>

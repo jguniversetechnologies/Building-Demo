@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useDemoState } from "@/lib/demo/hooks";
 import { loginResidentByPhone, normalizePhone } from "@/lib/demo/store";
 
@@ -9,26 +9,43 @@ const DEMO_OTP = "1234";
 
 export default function ResidentLoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const state = useDemoState();
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
-  const [inviteCode, setInviteCode] = useState("");
   const [step, setStep] = useState<"phone" | "otp">("phone");
   const [error, setError] = useState("");
 
-  const greenResidents = useMemo(
-    () =>
-      state.residents
-        .filter((r) => r.societyId === "soc_green")
-        .map((r) => {
-          const flat = state.flats.find((f) => f.id === r.flatId);
-          return { ...r, flatNumber: flat?.number ?? "" };
-        })
-        .sort((a, b) => a.flatNumber.localeCompare(b.flatNumber)),
-    [state.residents, state.flats],
-  );
+  const societySlug = searchParams.get("society") ?? "green-park";
+  const society =
+    state.societies.find((s) => s.slug === societySlug) ??
+    state.societies.find((s) => s.slug === "green-park") ??
+    state.societies[0] ??
+    null;
 
-  const matched = state.residents.find(
+  useEffect(() => {
+    const fromQuery = searchParams.get("phone");
+    if (!fromQuery) return;
+    setPhone(fromQuery);
+    setStep("phone");
+    setError("");
+  }, [searchParams]);
+
+  const quickPickResidents = useMemo(() => {
+    if (!society) return [];
+    return state.residents
+      .filter((r) => r.societyId === society.id)
+      .map((r) => {
+        const flat = state.flats.find((f) => f.id === r.flatId);
+        return {
+          ...r,
+          flatNumber: flat?.number ?? "",
+        };
+      })
+      .sort((a, b) => a.flatNumber.localeCompare(b.flatNumber));
+  }, [society, state.residents, state.flats]);
+
+  const matched = quickPickResidents.find(
     (r) => normalizePhone(r.phone) === normalizePhone(phone),
   );
 
@@ -39,11 +56,15 @@ export default function ResidentLoginPage() {
       setError("Enter a valid 10-digit mobile number");
       return;
     }
-    const found = state.residents.find(
+    const found = quickPickResidents.find(
       (r) => normalizePhone(r.phone) === digits,
     );
     if (!found) {
-      setError("No resident with this phone. Ask committee to invite you.");
+      setError(
+        society
+          ? `No resident with this phone in ${society.name}.`
+          : "No resident with this phone. Ask committee to invite you.",
+      );
       return;
     }
     setStep("otp");
@@ -56,7 +77,15 @@ export default function ResidentLoginPage() {
       setError(`Demo OTP is ${DEMO_OTP}`);
       return;
     }
-    const result = loginResidentByPhone(phone, inviteCode || undefined);
+    if (!matched) {
+      setError(
+        society
+          ? `No resident with this phone in ${society.name}.`
+          : "No resident with this phone.",
+      );
+      return;
+    }
+    const result = loginResidentByPhone(phone);
     if (!result.ok) {
       setError(result.error);
       return;
@@ -74,7 +103,9 @@ export default function ResidentLoginPage() {
           </svg>
         </div>
         <h1 className="text-2xl font-bold text-slate-900">Society Shastra</h1>
-        <p className="text-sm text-slate-500">Welcome back</p>
+        <p className="text-sm text-slate-500">
+          {society ? `${society.name} · Resident login` : "Welcome back"}
+        </p>
       </div>
 
       {/* Login Card */}
@@ -133,19 +164,6 @@ export default function ResidentLoginPage() {
               />
               <p className="mt-1 text-xs text-slate-500">Demo OTP: {DEMO_OTP}</p>
             </div>
-            {matched?.inviteCode ? (
-              <div>
-                <label className="mb-1 block text-sm font-medium text-slate-700">
-                  Invite Code
-                </label>
-                <input
-                  className="w-full rounded-xl border border-slate-300 px-4 py-3 font-mono text-sm uppercase focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
-                  placeholder="CHS-XXXXXX"
-                  value={inviteCode}
-                  onChange={(e) => setInviteCode(e.target.value)}
-                />
-              </div>
-            ) : null}
             <button
               type="submit"
               className="w-full rounded-xl bg-gradient-to-r from-teal-600 to-teal-700 py-3 text-sm font-semibold text-white shadow-md transition hover:from-teal-700 hover:to-teal-800"
@@ -189,37 +207,43 @@ export default function ResidentLoginPage() {
         </div>
       </div>
 
-      {/* Quick Pick Demo */}
+      {/* Quick Pick — residents for this society only */}
       <div className="mt-6 w-full rounded-2xl bg-white/80 p-4 shadow-sm backdrop-blur">
         <p className="mb-3 text-sm font-semibold text-slate-900">
-          Quick Pick (Demo Residents)
+          Quick Pick ({society?.name ?? "Society"} residents)
         </p>
-        <ul className="space-y-2">
-          {greenResidents.map((r) => (
+        <ul className="max-h-64 space-y-2 overflow-y-auto">
+          {quickPickResidents.map((r) => (
             <li key={r.id}>
               <button
                 type="button"
-                className="flex w-full items-center justify-between rounded-xl bg-slate-50 px-4 py-2.5 text-left text-sm transition hover:bg-teal-50 hover:border-teal-200 border border-transparent"
+                className="flex w-full items-center justify-between rounded-xl border border-transparent bg-slate-50 px-4 py-2.5 text-left text-sm transition hover:border-teal-200 hover:bg-teal-50"
                 onClick={() => {
                   setPhone(r.phone);
                   setStep("phone");
                   setError("");
-                  setInviteCode("");
                 }}
               >
                 <div className="flex items-center gap-3">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-teal-100 text-teal-700 font-semibold text-xs">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-teal-100 text-xs font-semibold text-teal-700">
                     {r.name.charAt(0)}
                   </div>
                   <div>
                     <p className="font-medium text-slate-900">{r.name}</p>
-                    <p className="text-xs text-slate-500">{r.flatNumber}</p>
+                    <p className="text-xs text-slate-500">
+                      {r.flatNumber || "—"}
+                    </p>
                   </div>
                 </div>
                 <span className="font-mono text-xs text-teal-800">{r.phone}</span>
               </button>
             </li>
           ))}
+          {quickPickResidents.length === 0 ? (
+            <li className="text-sm text-slate-500">
+              No residents in this society yet.
+            </li>
+          ) : null}
         </ul>
       </div>
     </div>

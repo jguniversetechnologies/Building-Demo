@@ -45,6 +45,10 @@ function parseState(raw: string | null): DemoState | null {
     if (!parsed?.societies || !Array.isArray(parsed.societies)) return null;
     // Drop stale localStorage when seed schema version changes.
     if (parsed.version !== DEMO_STATE_VERSION) return null;
+    // Invite codes removed from the demo — clear any leftover values.
+    if (Array.isArray(parsed.residents)) {
+      for (const r of parsed.residents) r.inviteCode = null;
+    }
     return parsed;
   } catch {
     return null;
@@ -122,6 +126,21 @@ export function clearSession() {
   setSession(null);
 }
 
+/** 10-digit demo phone that does not collide with `taken` (mutates the set). */
+function uniqueDemoPhone(taken: Set<string>, seed: number) {
+  for (let i = 0; i < 1000; i++) {
+    const n = (9000000000 + ((seed + i) % 999999999)) % 10000000000;
+    const phone = String(n).padStart(10, "9");
+    if (!taken.has(phone)) {
+      taken.add(phone);
+      return phone;
+    }
+  }
+  const fallback = `9${String(Date.now()).slice(-9)}`;
+  taken.add(fallback);
+  return fallback;
+}
+
 export function createSociety(input: {
   name: string;
   slug: string;
@@ -140,7 +159,23 @@ export function createSociety(input: {
   }
   const societyId = uid("soc");
   const buildingId = uid("bld");
-  const staffId = uid("stf");
+  const chairId = uid("stf");
+  const secId = uid("stf");
+  const treasId = uid("stf");
+  const flatType2Id = uid("ft");
+  const flatType3Id = uid("ft");
+  const flatId = uid("flt");
+  const residentId = uid("res");
+  const phoneSeed = Math.abs(
+    [...societyId].reduce((h, c) => (h * 31 + c.charCodeAt(0)) | 0, 0),
+  );
+  const takenPhones = new Set(
+    [
+      ...state.residents.map((r) => normalizePhone(r.phone)),
+      ...state.staff.map((s) => normalizePhone(s.phone)),
+      normalizePhone(input.chairmanPhone),
+    ].filter((p) => p.length === 10),
+  );
   const society: Society = {
     id: societyId,
     name: input.name,
@@ -158,7 +193,7 @@ export function createSociety(input: {
     isMain: true,
   };
   const chairman: StaffUser = {
-    id: staffId,
+    id: chairId,
     societyId,
     name: input.chairmanName,
     phone: input.chairmanPhone,
@@ -167,20 +202,57 @@ export function createSociety(input: {
     permissions: [...ROLE_PERMISSIONS.chairman],
     buildingScopeIds: null,
   };
+  const secretary: StaffUser = {
+    id: secId,
+    societyId,
+    name: "Demo Secretary",
+    phone: uniqueDemoPhone(takenPhones, phoneSeed + 1),
+    email: `secretary@${slug}.demo`,
+    roleTemplate: "secretary",
+    permissions: [...ROLE_PERMISSIONS.secretary],
+    buildingScopeIds: null,
+  };
+  const treasurer: StaffUser = {
+    id: treasId,
+    societyId,
+    name: "Demo Treasurer",
+    phone: uniqueDemoPhone(takenPhones, phoneSeed + 2),
+    email: `treasurer@${slug}.demo`,
+    roleTemplate: "treasurer",
+    permissions: [...ROLE_PERMISSIONS.treasurer],
+    buildingScopeIds: null,
+  };
   const config: BillingConfig = {
     societyId,
     latePenaltyAmount: 200,
     dueDayOfMonth: 10,
   };
   const defaultTypes: FlatType[] = [
-    { id: uid("ft"), societyId, name: "2BHK", monthlyRate: 3500 },
-    { id: uid("ft"), societyId, name: "3BHK", monthlyRate: 4500 },
+    { id: flatType2Id, societyId, name: "2BHK", monthlyRate: 3500 },
+    { id: flatType3Id, societyId, name: "3BHK", monthlyRate: 4500 },
   ];
+  const flat: Flat = {
+    id: flatId,
+    societyId,
+    buildingId,
+    number: "101",
+    flatTypeId: flatType2Id,
+  };
+  const resident: Resident = {
+    id: residentId,
+    societyId,
+    flatId,
+    name: "Demo Resident",
+    phone: uniqueDemoPhone(takenPhones, phoneSeed + 3),
+    inviteCode: null,
+  };
   state.societies.push(society);
   state.buildings.push(building);
-  state.staff.push(chairman);
+  state.staff.push(chairman, secretary, treasurer);
   state.billingConfigs.push(config);
   state.flatTypes.push(...defaultTypes);
+  state.flats.push(flat);
+  state.residents.push(resident);
   writeState(state);
   return society;
 }
@@ -261,8 +333,8 @@ export function normalizePhone(phone: string) {
   return phone.replace(/\D/g, "").slice(-10);
 }
 
-/** Resident app login: phone (+ optional invite code for newly invited). */
-export function loginResidentByPhone(phone: string, inviteCode?: string) {
+/** Resident app login: phone + OTP only (no invite code). */
+export function loginResidentByPhone(phone: string) {
   const state = readState();
   const digits = normalizePhone(phone);
   if (digits.length !== 10) {
@@ -277,18 +349,6 @@ export function loginResidentByPhone(phone: string, inviteCode?: string) {
       error: "No resident found for this phone. Invite them first from Residents.",
     };
   }
-  if (resident.inviteCode) {
-    const code = (inviteCode ?? "").trim().toUpperCase();
-    if (!code) {
-      return {
-        ok: false as const,
-        error: "Enter the invite code given by the committee",
-      };
-    }
-    if (code !== resident.inviteCode.toUpperCase()) {
-      return { ok: false as const, error: "Invite code does not match" };
-    }
-  }
   const flat = state.flats.find((f) => f.id === resident.flatId);
   const society = state.societies.find((s) => s.id === resident.societyId);
   const session: DemoSession = {
@@ -299,7 +359,6 @@ export function loginResidentByPhone(phone: string, inviteCode?: string) {
     label: `Resident · ${resident.name} · ${flat?.number ?? ""}`,
   };
   state.session = session;
-  // First successful login clears invite requirement for smoother re-entry
   if (resident.inviteCode) resident.inviteCode = null;
   writeState(state);
   return { ok: true as const, resident, society, session };
@@ -606,13 +665,12 @@ export function inviteResident(input: {
   name: string;
   phone: string;
 }) {
-  const inviteCode = `CHS-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
   const resident = addResident({
     ...input,
     phone: normalizePhone(input.phone),
-    inviteCode,
+    inviteCode: null,
   });
-  return { resident, inviteCode };
+  return { resident };
 }
 
 export function updateSociety(

@@ -59,8 +59,9 @@ export default function SocietiesPage() {
       {/* Create Society Form */}
       <PageCard title="Create New Society">
         <p className="mb-4 text-sm text-slate-600">
-          Creates the CHS account + Building <strong>Main</strong> + invites Chairman.
-          Wings/flats/money stay in society console.
+          Creates the CHS account + Building <strong>Main</strong> + Chairman,
+          Secretary, Treasurer, flat 101, and a demo resident. Switch into those
+          roles from <strong>Enter any society</strong> on pitch home.
         </p>
         <form
           className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
@@ -79,7 +80,9 @@ export default function SocietiesPage() {
                 chairmanEmail,
               });
               setCreatedSlug(society.slug);
-              ok(`Created ${society.name}`);
+              ok(
+                `Created ${society.name} with Secretary, Treasurer & demo resident — use Enter any society on pitch home to switch roles`,
+              );
               setName("");
               setSlug("");
               setAddress("");

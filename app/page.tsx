@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useDemoState } from "@/lib/demo/hooks";
 import { clearSession, setSession } from "@/lib/demo/store";
-import type { DemoSession } from "@/lib/demo/types";
+import type { DemoSession, StaffUser } from "@/lib/demo/types";
 
 type Card = {
   step?: string;
@@ -13,6 +13,24 @@ type Card = {
   href: string;
   accent?: string;
 };
+
+const STAFF_ROLE_ORDER: StaffUser["roleTemplate"][] = [
+  "chairman",
+  "secretary",
+  "treasurer",
+  "building_manager",
+];
+
+function staffHref(role: StaffUser["roleTemplate"], slug: string) {
+  if (role === "secretary") return `/society/${slug}/residents`;
+  if (role === "treasurer") return `/society/${slug}/billing`;
+  if (role === "building_manager") return `/society/${slug}/residents`;
+  return `/society/${slug}`;
+}
+
+function roleLabel(role: StaffUser["roleTemplate"]) {
+  return role.replace("_", " ");
+}
 
 export default function HomePage() {
   const router = useRouter();
@@ -79,7 +97,7 @@ export default function HomePage() {
       step: "4",
       title: "Resident login & pay",
       desc: `Phone login (${resident?.phone ?? "9000002101"}) → OTP 1234 → pay any amount`,
-      href: "/app/login",
+      href: `/app/login?society=${encodeURIComponent(green?.slug ?? "green-park")}`,
       accent: "from-cyan-700 to-cyan-950",
       session: null,
     },
@@ -139,7 +157,7 @@ export default function HomePage() {
     {
       title: "Resident phone login",
       desc: "Open app → enter mobile → OTP 1234 → bill & pay",
-      href: "/app/login",
+      href: `/app/login?society=${encodeURIComponent(green?.slug ?? "green-park")}`,
       session: null,
     },
   ];
@@ -186,6 +204,105 @@ export default function HomePage() {
               <p className="mt-1 text-sm text-white/85">{card.desc}</p>
             </button>
           ))}
+        </div>
+      </section>
+
+      <section>
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">
+          Enter any society
+        </h2>
+        <p className="mb-4 text-sm text-slate-600">
+          After creating a society, switch into Chairman, Secretary, or
+          Treasurer here. Resident login opens that society’s phone login with
+          its resident list below.
+        </p>
+        <div className="space-y-4">
+          {state.societies.map((society) => {
+            const staff = state.staff
+              .filter((s) => s.societyId === society.id)
+              .sort(
+                (a, b) =>
+                  STAFF_ROLE_ORDER.indexOf(a.roleTemplate) -
+                  STAFF_ROLE_ORDER.indexOf(b.roleTemplate),
+              );
+            const residentCount = state.residents.filter(
+              (r) => r.societyId === society.id,
+            ).length;
+            return (
+              <div
+                key={society.id}
+                className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+              >
+                <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
+                  <div>
+                    <h3 className="text-lg font-semibold text-slate-900">
+                      {society.name}
+                    </h3>
+                    <p className="text-sm text-slate-500">
+                      /{society.slug} · {society.city}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {staff.map((s) => (
+                    <button
+                      key={s.id}
+                      type="button"
+                      onClick={() =>
+                        enter({
+                          title: s.roleTemplate,
+                          desc: s.name,
+                          href: staffHref(s.roleTemplate, society.slug),
+                          session: {
+                            role: s.roleTemplate,
+                            societyId: society.id,
+                            staffId: s.id,
+                            residentId: null,
+                            label: `${roleLabel(s.roleTemplate)} · ${s.name}`,
+                          },
+                        })
+                      }
+                      className="cursor-pointer rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-left text-sm transition hover:border-teal-600 hover:bg-teal-50"
+                    >
+                      <span className="block font-medium capitalize text-slate-900">
+                        {roleLabel(s.roleTemplate)}
+                      </span>
+                      <span className="block text-xs text-slate-500">
+                        {s.name}
+                      </span>
+                    </button>
+                  ))}
+                  {residentCount > 0 ? (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        enter({
+                          title: "Resident login",
+                          desc: society.name,
+                          href: `/app/login?society=${encodeURIComponent(society.slug)}`,
+                          session: null,
+                        })
+                      }
+                      className="cursor-pointer rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-left text-sm transition hover:border-cyan-600 hover:bg-cyan-50"
+                    >
+                      <span className="block font-medium text-slate-900">
+                        Resident login
+                      </span>
+                      <span className="block text-xs text-slate-500">
+                        {residentCount} resident{residentCount === 1 ? "" : "s"} ·
+                        phone + OTP
+                      </span>
+                    </button>
+                  ) : null}
+                  {staff.length === 0 && residentCount === 0 ? (
+                    <p className="text-sm text-slate-500">
+                      No staff or residents yet.
+                    </p>
+                  ) : null}
+                </div>
+              </div>
+            );
+          })}
         </div>
       </section>
 
